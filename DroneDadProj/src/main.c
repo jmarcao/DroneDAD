@@ -136,14 +136,14 @@ int main(void)
 	/* Initialize the BSP. */
 	nm_bsp_init();
 	
-	/* Do our own initilization for CLI */
+	/* Do our own initialization for CLI */
 	init_cmd_list(); // Creates the help struct.
 	char input[256];
 	
 	printf("=== DroneDAD CLI Interface ===\r\n");
 	while (1) {
 		printf("> ");
-		scanf("%[^\r]%*c", input);
+		scanf("%[^\r\n]%*c", input);
 		handle_user_input(input);
 	}
 
