@@ -33,10 +33,11 @@
   <options>
     <option id="common.boards" value="Add" config="" content-id="Atmel.ASF" />
     <option id="common.components.wifi.winc1500" value="Add" config="" content-id="Atmel.ASF" />
-    <option id="sam0.drivers.port" value="Add" config="" content-id="Atmel.ASF" />
-    <option id="sam0.utils.stdio.stdio_serial" value="Add" config="" content-id="Atmel.ASF" />
     <option id="sam0.drivers.adc" value="Add" config="callback" content-id="Atmel.ASF" />
+    <option id="sam0.drivers.port" value="Add" config="" content-id="Atmel.ASF" />
     <option id="sam0.drivers.sercom.i2c.master" value="Add" config="callback" content-id="Atmel.ASF" />
+    <option id="sam0.utils.stdio.stdio_serial" value="Add" config="" content-id="Atmel.ASF" />
+    <option id="sam0.components.sensor.at30tse75x" value="Add" config="" content-id="Atmel.ASF" />
     <option id="common.components.wifi.winc1500.chip_info_example" value="Add" config="" content-id="Atmel.ASF" />
     <option id="common.utils" value="Add" config="" content-id="Atmel.ASF" />
     <option id="sam0.utils" value="Add" config="" content-id="Atmel.ASF" />
@@ -314,6 +315,10 @@
     <file path="src/ASF/sam0/drivers/sercom/i2c/quick_start_master_dma/qs_i2c_master_dma.h" framework="" version="3.35.1" source="sam0\drivers\sercom\i2c\quick_start_master_dma\qs_i2c_master_dma.h" changed="False" content-id="Atmel.ASF" />
     <file path="src/ASF/sam0/drivers/sercom/i2c/i2c_sam0/i2c_master.c" framework="" version="3.35.1" source="sam0\drivers\sercom\i2c\i2c_sam0\i2c_master.c" changed="False" content-id="Atmel.ASF" />
     <file path="src/ASF/sam0/drivers/sercom/i2c/i2c_sam0/i2c_master_interrupt.c" framework="" version="3.35.1" source="sam0\drivers\sercom\i2c\i2c_sam0\i2c_master_interrupt.c" changed="False" content-id="Atmel.ASF" />
+    <file path="src/ASF/sam0/components/sensor/at30tse75x/at30tse75x.c" framework="" version="3.35.1" source="sam0\components\sensor\at30tse75x\at30tse75x.c" changed="False" content-id="Atmel.ASF" />
+    <file path="src/ASF/sam0/components/sensor/at30tse75x/at30tse75x.h" framework="" version="3.35.1" source="sam0\components\sensor\at30tse75x\at30tse75x.h" changed="False" content-id="Atmel.ASF" />
+    <file path="src/ASF/sam0/components/sensor/at30tse75x/quick_start/qs_at30tse75x.h" framework="" version="3.35.1" source="sam0\components\sensor\at30tse75x\quick_start\qs_at30tse75x.h" changed="False" content-id="Atmel.ASF" />
+    <file path="src/Config/conf_at30tse75x.h" framework="" version="3.35.1" source="sam0\components\sensor\at30tse75x\module_config\conf_at30tse75x.h" changed="False" content-id="Atmel.ASF" />
   </files>
   <documentation help="http://asf.atmel.com/docs/3.35.1/common.components.wifi.winc1500.chip_info_example.samw25_xplained_pro/html/index.html" />
   <offline-documentation help="" />
@@ -386,6 +391,7 @@
       <Value>../src/ASF/sam0/drivers/adc/adc_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
+      <Value>../src/ASF/sam0/components/sensor/at30tse75x</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.level>Optimize for size (-Os)</armgcc.compiler.optimization.level>
@@ -446,6 +452,7 @@
       <Value>../src/ASF/sam0/drivers/adc/adc_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
+      <Value>../src/ASF/sam0/components/sensor/at30tse75x</Value>
     </ListValues>
   </armgcc.assembler.general.IncludePaths>
   <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=SAMW25_XPLAINED_PRO -DEXTINT_CALLBACK_MODE=true -DSPI_CALLBACK_MODE=true -DSYSTICK_MODE -DUSART_CALLBACK_MODE=true -D__SAMD21G18A__ -DADC_CALLBACK_MODE=true -DI2C_MASTER_CALLBACK_MODE=true</armgcc.preprocessingassembler.general.AssemblerFlags>
@@ -488,6 +495,7 @@
       <Value>../src/ASF/sam0/drivers/adc/adc_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
+      <Value>../src/ASF/sam0/components/sensor/at30tse75x</Value>
     </ListValues>
   </armgcc.preprocessingassembler.general.IncludePaths>
 </ArmGcc>
@@ -554,6 +562,7 @@
       <Value>../src/ASF/sam0/drivers/adc/adc_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
+      <Value>../src/ASF/sam0/components/sensor/at30tse75x</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.level>Optimize (-O1)</armgcc.compiler.optimization.level>
@@ -615,6 +624,7 @@
       <Value>../src/ASF/sam0/drivers/adc/adc_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
+      <Value>../src/ASF/sam0/components/sensor/at30tse75x</Value>
     </ListValues>
   </armgcc.assembler.general.IncludePaths>
   <armgcc.assembler.debugging.DebugLevel>Default (-g)</armgcc.assembler.debugging.DebugLevel>
@@ -658,6 +668,7 @@
       <Value>../src/ASF/sam0/drivers/adc/adc_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
+      <Value>../src/ASF/sam0/components/sensor/at30tse75x</Value>
     </ListValues>
   </armgcc.preprocessingassembler.general.IncludePaths>
   <armgcc.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcc.preprocessingassembler.debugging.DebugLevel>
@@ -703,6 +714,10 @@
     <Folder Include="src\ASF\sam0\" />
     <Folder Include="src\ASF\sam0\boards\" />
     <Folder Include="src\ASF\sam0\boards\samw25_xplained_pro\" />
+    <Folder Include="src\ASF\sam0\components\" />
+    <Folder Include="src\ASF\sam0\components\sensor\" />
+    <Folder Include="src\ASF\sam0\components\sensor\at30tse75x\" />
+    <Folder Include="src\ASF\sam0\components\sensor\at30tse75x\quick_start\" />
     <Folder Include="src\ASF\sam0\drivers\" />
     <Folder Include="src\ASF\sam0\drivers\adc\" />
     <Folder Include="src\ASF\sam0\drivers\adc\adc_sam_d_r_h\" />
@@ -771,6 +786,15 @@
     <None Include="src\ASF\sam0\drivers\adc\adc.h">
       <SubType>compile</SubType>
     </None>
+    <Compile Include="src\ASF\sam0\components\sensor\at30tse75x\at30tse75x.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\ASF\sam0\components\sensor\at30tse75x\at30tse75x.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\ASF\sam0\components\sensor\at30tse75x\quick_start\qs_at30tse75x.h">
+      <SubType>compile</SubType>
+    </None>
     <Compile Include="src\ASF\sam0\drivers\adc\adc_sam_d_r_h\adc.c">
       <SubType>compile</SubType>
     </Compile>
@@ -810,6 +834,9 @@
     <Compile Include="src\CLIHandler.h">
       <SubType>compile</SubType>
     </Compile>
+    <None Include="src\config\conf_at30tse75x.h">
+      <SubType>compile</SubType>
+    </None>
     <Compile Include="src\Version.h">
       <SubType>compile</SubType>
     </Compile>

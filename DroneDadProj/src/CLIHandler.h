@@ -27,14 +27,14 @@ void handle_user_input(char* input);
 void handle_help();
 void handle_ver_bl();
 void handle_ver_app();
-void handle_gpio_set(int port, int pin_num);
-void handle_gpio_clear(int port, int pin_num);
-void handle_gpio_get(int port, int pin_num);
+void handle_gpio_set(char port, int pin_num);
+void handle_gpio_clear(char port, int pin_num);
+void handle_gpio_get(char port, int pin_num);
 void handle_mac();
 void handle_ip();
 void handle_read_gyro(int num_readings, int interval_ms);
 void handle_read_accel(int num_readings, int interval_ms);
-void handle_adc_get(int port, int pin_num);
+void handle_adc_get(char port, int pin_num);
 void handle_mcu_temp();
 void handle_i2c_scan();
 

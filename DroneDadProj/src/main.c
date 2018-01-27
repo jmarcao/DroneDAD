@@ -93,6 +93,10 @@
 /** UART module for debug. */
 static struct usart_module cdc_uart_module;
 
+/** Global for adc **/
+struct adc_module adc_inst;
+struct i2c_master_module i2c_master_instance;
+
 /**
  * \brief Configure UART console.
  */
@@ -110,6 +114,40 @@ static void configure_console(void)
 
 	stdio_serial_init(&cdc_uart_module, EDBG_CDC_MODULE, &usart_conf);
 	usart_enable(&cdc_uart_module);
+}
+
+static void configure_gpio(void) {
+	struct port_config config_port_pin;
+	port_get_config_defaults(&config_port_pin);
+	config_port_pin.direction = PORT_PIN_DIR_OUTPUT;
+	port_pin_set_config(PIN_PB02, &config_port_pin);
+}
+
+static void configure_adc(void) {
+	struct adc_config config;
+	
+	adc_get_config_defaults(&config);
+	config.clock_source = GCLK_GENERATOR_1;
+	config.reference = ADC_REFERENCE_INTVCC1;
+	config.clock_prescaler = ADC_CTRLB_PRESCALER_DIV16;
+	config.resolution = ADC_RESOLUTION_12BIT;
+	adc_init(&adc_inst, ADC, &config);
+	adc_enable(&adc_inst);
+}
+
+void configure_i2c(void)
+{
+	/* Initialize config structure and software module */
+	struct i2c_master_config config_i2c_master;
+	i2c_master_get_config_defaults(&config_i2c_master);
+	/* Change buffer timeout to something longer */
+	config_i2c_master.buffer_timeout    = 65535;
+	config_i2c_master.pinmux_pad0       = PINMUX_PA08D_SERCOM2_PAD0;
+	config_i2c_master.pinmux_pad1       = PINMUX_PA09D_SERCOM2_PAD1;
+	config_i2c_master.generator_source  = GCLK_GENERATOR_0;
+	/* Initialize and enable device with config */
+	while(i2c_master_init(&i2c_master_instance, SERCOM2, &config_i2c_master) != STATUS_OK);
+	i2c_master_enable(&i2c_master_instance);
 }
 
 /**
@@ -136,6 +174,11 @@ int main(void)
 	/* Initialize the BSP. */
 	nm_bsp_init();
 	
+	/* Init the GPIO & ADC */
+	configure_gpio();
+	configure_adc();
+	configure_i2c();
+		
 	/* Do our own initialization for CLI */
 	init_cmd_list(); // Creates the help struct.
 	char input[256];
