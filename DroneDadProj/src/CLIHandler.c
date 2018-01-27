@@ -11,6 +11,7 @@
 
 #include "CLIHandler.h"
 #include "Version.h"
+#include "adc_temp.h"
 
 const char* CMD_HELP = "help";
 const char* CMD_VER_BL = "ver_bl";
@@ -45,6 +46,22 @@ void init_cmd_list() {
 		{ CMD_MCU_TEMP, "", "Print the temperature reading of the on-board MCU temperature sensor." } ,
 		{ CMD_I2C_SCAN, "", "Print out list of addresses of I2C devices on bus." }}
 	};
+}
+
+static void disable_adc(void) {
+	adc_disable(&adc_inst);
+}
+
+static void configure_adc(void) {
+	struct adc_config config;
+	
+	adc_get_config_defaults(&config);
+	config.clock_source = GCLK_GENERATOR_1;
+	config.reference = ADC_REFERENCE_INTVCC1;
+	config.clock_prescaler = ADC_CTRLB_PRESCALER_DIV16;
+	config.resolution = ADC_RESOLUTION_12BIT;
+	adc_init(&adc_inst, ADC, &config);
+	adc_enable(&adc_inst);
 }
 
 // TODO: If arg1 or arg2 are non-digit, we need to throw an error.
@@ -277,6 +294,9 @@ void handle_read_accel(int num_readings, int interval_ms) {
 }
 
 void handle_adc_get(char port, int pin_num) {
+	disable_adc();
+	configure_adc();
+	
 	adc_start_conversion(&adc_inst);
 	uint16_t result;
 	
@@ -288,7 +308,24 @@ void handle_adc_get(char port, int pin_num) {
 }
 
 void handle_mcu_temp() {
-	printf("Not implemented yet!\r\n");
+	disable_adc();
+	
+	system_voltage_reference_enable(SYSTEM_VOLTAGE_REFERENCE_TEMPSENSE);
+	
+	configure_adc_temp();
+	
+	load_calibration_data();
+	
+	adc_start_conversion(&adc_inst);
+	uint16_t result;
+	
+	do {
+		/* Wait */
+	} while(adc_read(&adc_inst, &result) == STATUS_BUSY);
+	
+	float temp = calculate_temperature(2500);
+	
+	printf("Temp Result: %.6f\r\n", temp);
 }
 
 // TODO: Put this in a cleaner place

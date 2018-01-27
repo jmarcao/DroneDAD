@@ -123,18 +123,6 @@ static void configure_gpio(void) {
 	port_pin_set_config(PIN_PB02, &config_port_pin);
 }
 
-static void configure_adc(void) {
-	struct adc_config config;
-	
-	adc_get_config_defaults(&config);
-	config.clock_source = GCLK_GENERATOR_1;
-	config.reference = ADC_REFERENCE_INTVCC1;
-	config.clock_prescaler = ADC_CTRLB_PRESCALER_DIV16;
-	config.resolution = ADC_RESOLUTION_12BIT;
-	adc_init(&adc_inst, ADC, &config);
-	adc_enable(&adc_inst);
-}
-
 void configure_i2c(void)
 {
 	/* Initialize config structure and software module */
@@ -148,6 +136,18 @@ void configure_i2c(void)
 	/* Initialize and enable device with config */
 	while(i2c_master_init(&i2c_master_instance, SERCOM2, &config_i2c_master) != STATUS_OK);
 	i2c_master_enable(&i2c_master_instance);
+}
+
+static void configure_adc(void) {
+	struct adc_config config;
+	
+	adc_get_config_defaults(&config);
+	config.clock_source = GCLK_GENERATOR_1;
+	config.reference = ADC_REFERENCE_INTVCC1;
+	config.clock_prescaler = ADC_CTRLB_PRESCALER_DIV16;
+	config.resolution = ADC_RESOLUTION_12BIT;
+	adc_init(&adc_inst, ADC, &config);
+	adc_enable(&adc_inst);
 }
 
 /**

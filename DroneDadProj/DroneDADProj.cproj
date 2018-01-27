@@ -786,6 +786,12 @@
     <None Include="src\ASF\sam0\drivers\adc\adc.h">
       <SubType>compile</SubType>
     </None>
+    <Compile Include="src\adc_temp.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\adc_temp.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\ASF\sam0\components\sensor\at30tse75x\at30tse75x.c">
       <SubType>compile</SubType>
     </Compile>
