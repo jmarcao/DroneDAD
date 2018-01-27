@@ -83,18 +83,27 @@ void handle_user_input(char* input) {
 		
 		handle_gpio_clear(port, pin_num); 
 	}
-	else if(strcmp(CMD_GPIO_GET, cmd) == 0) { 
+	else if(strcmp(CMD_GPIO_SET, cmd) == 0) {
 		char* arg1 = strtok(NULL, " ");
 		char* arg2 = strtok(NULL, " ");
-		int port = atoi(arg1);
-		int pin_num = atoi(arg2);
 		
 		if(arg1 == 0 || arg2 == 0) {
 			printf("Not enough arguments! Try \"help\".\r\n");
 			return;
 		}
-		
-		handle_gpio_get(port, pin_num); 
+
+		int port = arg1;
+		int pin_num = atoi(arg2);
+
+		if ((strcmp(port,"A") != 0) || (strcmp(port,"B") != 0)){
+			printf("Enter a valid Port! Try \"help\".\r\n");
+		}
+
+		if (pin_num <= 0 && pin_num > 32) {
+			printf("Enter a valid Pin Number! Try \"help\".\r\n");
+		}
+
+		handle_gpio_set(port, pin_num);
 	}
 	else if(strcmp(CMD_MAC, cmd) == 0) { 
 		handle_mac(); 
