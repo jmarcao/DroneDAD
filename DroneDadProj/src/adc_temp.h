@@ -58,9 +58,8 @@
 
 /* Function Prototypes for the ADC Temp Sensor Operation */
 void configure_adc_temp(void);
-float convert_dec_to_frac(uint8_t val);
-void load_calibration_data(void);
-float calculate_temperature(uint16_t raw_code);
+
+int calculate_temperature(int adc_result);
 
 
 #endif /* ADC_TEMP_H_INCLUDED */

@@ -37,7 +37,7 @@ void init_cmd_list() {
 		{ CMD_VER_APP, "", "Print application version information." } ,
 		{ CMD_GPIO_SET, "[port] [pin_num]", "Set GPIO pin at a given port high." } ,
 		{ CMD_GPIO_CLEAR, "[port] [pin_num]", "Set GPIO pin at a given port low." } ,
-		{ CMD_GPIO_GET, "[port] [pin_num]", "Get state of a GPIO pin." } ,
+		{ CMD_GPIO_GET, "[port] [pin_num]", "Get state of a GPIO pin.(Enter B 2 or B 3)" } ,
 		{ CMD_MAC, "", "Print the MAC address." } ,
 		{ CMD_IP, "", "Print the IP Address." } ,
 		{ CMD_READ_GYRO, "[reading count] [interval in ms]", "Read from the Gyroscope sensor." } ,
@@ -66,7 +66,10 @@ static void configure_adc(void) {
 
 // TODO: If arg1 or arg2 are non-digit, we need to throw an error.
 void handle_user_input(char* input) {
+
 	char* cmd = strtok(input, " ");
+
+
 	
 	if(strcmp(CMD_HELP, cmd) == 0) { 
 		handle_help(); 
@@ -252,15 +255,21 @@ void handle_gpio_clear(char port, int pin_num) {
 
 void handle_gpio_get(char port, int pin_num) {
 	// TODO: Must implement this feature for at least two pins.
-	
+		uint8_t pin = PIN_PB02;
+		bool level;
+
 	// Hard-coded testing
-	uint8_t pin = PIN_PB02;
-	bool level;
-	level = port_pin_get_output_level(pin);
+	if (port == "B" && pin_num == 2){
+		level = port_pin_get_output_level(pin);
+	}
+
+	else if (port == "B" && pin_num == 3){
+		uint8_t pin = PIN_PB03;
+		level = port_pin_get_output_level(pin);
+	}
 	
-	printf("%d\r\n", level);
-		
-	printf("Not implemented yet!\r\n");
+	printf("The level set is %d\r\n", level);
+
 }
 
 void handle_mac() {
@@ -314,8 +323,6 @@ void handle_mcu_temp() {
 	
 	configure_adc_temp();
 	
-	load_calibration_data();
-	
 	adc_start_conversion(&adc_inst);
 	uint16_t result;
 	
@@ -323,9 +330,9 @@ void handle_mcu_temp() {
 		/* Wait */
 	} while(adc_read(&adc_inst, &result) == STATUS_BUSY);
 	
-	float temp = calculate_temperature(2500);
+	int temp = calculate_temperature(result);
 	
-	printf("Temp Result: %.6f\r\n", temp);
+	printf("Temperature Result: %d \r\n", temp);
 }
 
 // TODO: Put this in a cleaner place
@@ -359,8 +366,8 @@ static struct i2c_master_packet rd_packet = {
 };
 
 void handle_i2c_scan() {
-	/*
-	  for(int slave_address = 0; slave_address <= 127; slave_address++) {
+	
+	  for(char slave_address = 0; slave_address <= 127; slave_address++) {
 		  enum status_code i2c_status;
 		  wr_packet.address     = slave_address;
 		  wr_packet.data_length = 1;
@@ -369,9 +376,9 @@ void handle_i2c_scan() {
 		  i2c_status = i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &wr_packet);
 		  if( i2c_status == STATUS_OK ) {
 			  //i2c_status = i2c_master_read_packet_wait(&i2c_master_instance, &rd_packet);
-			  
+			 printf("The slave address is %d \r\n", slave_address); 
 		  }
 		  i2c_master_send_stop(&i2c_master_instance);
 	 }
-	 */
+	
 }
