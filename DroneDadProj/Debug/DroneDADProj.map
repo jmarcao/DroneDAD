@@ -12617,7 +12617,6 @@ LOAD c:/program files (x86)/atmel/studio/7.0/toolchain/arm/arm-gnu-toolchain/bin
                 0x00006168       0x30 src/main.o
  .text.configure_i2c
                 0x00006198       0x68 src/main.o
-                0x00006198                configure_i2c
  .text.configure_adc
                 0x00006200       0x58 src/main.o
  .text.main     0x00006258       0x8c src/main.o
@@ -13312,7 +13311,7 @@ OUTPUT(DroneDADProj.elf elf32-littlearm)
  .comment       0x00000059       0x5a src/ASF/sam0/utils/syscalls/gcc/syscalls.o
  .comment       0x00000059       0x5a src/main.o
 
-.debug_info     0x00000000    0x42c38
+.debug_info     0x00000000    0x42c37
  .debug_info    0x00000000     0x4098 src/adc_temp.o
  .debug_info    0x00004098     0x3a4d src/ASF/sam0/drivers/adc/adc_sam_d_r_h/adc.o
  .debug_info    0x00007ae5     0x1a6a src/ASF/sam0/drivers/adc/adc_sam_d_r_h/adc_callback.o
@@ -13338,9 +13337,9 @@ OUTPUT(DroneDADProj.elf elf32-littlearm)
  .debug_info    0x0003b9f1      0xabf src/ASF/sam0/utils/stdio/read.o
  .debug_info    0x0003c4b0      0xac8 src/ASF/sam0/utils/stdio/write.o
  .debug_info    0x0003cf78      0xda1 src/ASF/sam0/utils/syscalls/gcc/syscalls.o
- .debug_info    0x0003dd19     0x4f1f src/main.o
+ .debug_info    0x0003dd19     0x4f1e src/main.o
 
-.debug_abbrev   0x00000000     0x4b95
+.debug_abbrev   0x00000000     0x4b7b
  .debug_abbrev  0x00000000      0x31c src/adc_temp.o
  .debug_abbrev  0x0000031c      0x371 src/ASF/sam0/drivers/adc/adc_sam_d_r_h/adc.o
  .debug_abbrev  0x0000068d      0x2e3 src/ASF/sam0/drivers/adc/adc_sam_d_r_h/adc_callback.o
@@ -13366,7 +13365,7 @@ OUTPUT(DroneDADProj.elf elf32-littlearm)
  .debug_abbrev  0x000041f2      0x1f4 src/ASF/sam0/utils/stdio/read.o
  .debug_abbrev  0x000043e6      0x1f4 src/ASF/sam0/utils/stdio/write.o
  .debug_abbrev  0x000045da      0x22a src/ASF/sam0/utils/syscalls/gcc/syscalls.o
- .debug_abbrev  0x00004804      0x391 src/main.o
+ .debug_abbrev  0x00004804      0x377 src/main.o
 
 .debug_loc      0x00000000     0x3c9e
  .debug_loc     0x00000000      0x188 src/adc_temp.o
@@ -14327,7 +14326,6 @@ cmd_list                                          src/main.o
 coarse_temp                                       src/adc_temp.o
 configure_adc_temp                                src/adc_temp.o
                                                   src/CLIHandler.o
-configure_i2c                                     src/main.o
 connect                                           src/ASF/common/components/wifi/winc1500/socket/source/socket.o
 cpu_halt                                          src/ASF/common/components/wifi/winc1500/driver/source/nmasic.o
 cpu_irq_enter_critical                            src/ASF/common/utils/interrupt/interrupt_sam_nvic.o

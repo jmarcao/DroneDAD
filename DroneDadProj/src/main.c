@@ -116,14 +116,15 @@ static void configure_console(void)
 	usart_enable(&cdc_uart_module);
 }
 
-static void configure_gpio(void) {
+static void configure_gpio(void)
+{
 	struct port_config config_port_pin;
 	port_get_config_defaults(&config_port_pin);
 	config_port_pin.direction = PORT_PIN_DIR_OUTPUT;
 	port_pin_set_config(PIN_PB02, &config_port_pin);
 }
 
-void configure_i2c(void)
+static void configure_i2c(void)
 {
 	/* Initialize config structure and software module */
 	struct i2c_master_config config_i2c_master;
@@ -138,7 +139,8 @@ void configure_i2c(void)
 	i2c_master_enable(&i2c_master_instance);
 }
 
-static void configure_adc(void) {
+static void configure_adc(void)
+{
 	struct adc_config config;
 	
 	adc_get_config_defaults(&config);

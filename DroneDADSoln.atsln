@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Atmel Studio Solution File, Format Version 11.00
-VisualStudioVersion = 14.0.25420.1
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "DroneDADProj", "DroneDadProj\DroneDADProj.cproj", "{DCE6C7E3-EE26-4D79-826B-08594B9AD897}"
+EndProject
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "DroneDADBootloader", "DroneDADBootloader\DroneDADBootloader.cproj", "{40F06A1C-890D-4641-AC99-BE7557412720}"
+EndProject
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "DroneDADApplication", "DroneDADApplication\DroneDADApplication.cproj", "{CB764C1C-6939-46FB-BEE3-91864C44FFF4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Debug|ARM.Build.0 = Debug|ARM
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Release|ARM.ActiveCfg = Release|ARM
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Release|ARM.Build.0 = Release|ARM
+		{40F06A1C-890D-4641-AC99-BE7557412720}.Debug|ARM.ActiveCfg = Debug|ARM
+		{40F06A1C-890D-4641-AC99-BE7557412720}.Debug|ARM.Build.0 = Debug|ARM
+		{40F06A1C-890D-4641-AC99-BE7557412720}.Release|ARM.ActiveCfg = Release|ARM
+		{40F06A1C-890D-4641-AC99-BE7557412720}.Release|ARM.Build.0 = Release|ARM
+		{CB764C1C-6939-46FB-BEE3-91864C44FFF4}.Debug|ARM.ActiveCfg = Debug|ARM
+		{CB764C1C-6939-46FB-BEE3-91864C44FFF4}.Debug|ARM.Build.0 = Debug|ARM
+		{CB764C1C-6939-46FB-BEE3-91864C44FFF4}.Release|ARM.ActiveCfg = Release|ARM
+		{CB764C1C-6939-46FB-BEE3-91864C44FFF4}.Release|ARM.Build.0 = Release|ARM
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

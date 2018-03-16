@@ -15,23 +15,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY
   5 .comment      00000059  00000000  00000000  00020260  2**0
                   CONTENTS, READONLY
-  6 .debug_info   00042c38  00000000  00000000  000202b9  2**0
+  6 .debug_info   00042c37  00000000  00000000  000202b9  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 00004b95  00000000  00000000  00062ef1  2**0
+  7 .debug_abbrev 00004b7b  00000000  00000000  00062ef0  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_loc    00003c9e  00000000  00000000  00067a86  2**0
+  8 .debug_loc    00003c9e  00000000  00000000  00067a6b  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_aranges 00000b50  00000000  00000000  0006b724  2**0
+  9 .debug_aranges 00000b50  00000000  00000000  0006b709  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_ranges 000009b0  00000000  00000000  0006c274  2**0
+ 10 .debug_ranges 000009b0  00000000  00000000  0006c259  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_macro  0001dc21  00000000  00000000  0006cc24  2**0
+ 11 .debug_macro  0001dc21  00000000  00000000  0006cc09  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_line   000131c5  00000000  00000000  0008a845  2**0
+ 12 .debug_line   000131c5  00000000  00000000  0008a82a  2**0
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_str    0008e995  00000000  00000000  0009da0a  2**0
+ 13 .debug_str    0008e995  00000000  00000000  0009d9ef  2**0
                   CONTENTS, READONLY, DEBUGGING
- 14 .debug_frame  000033bc  00000000  00000000  0012c3a0  2**2
+ 14 .debug_frame  000033bc  00000000  00000000  0012c384  2**2
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -17082,7 +17082,8 @@ static void configure_console(void)
 
 00006168 <configure_gpio>:
 
-static void configure_gpio(void) {
+static void configure_gpio(void)
+{
     6168:	b580      	push	{r7, lr}
     616a:	b082      	sub	sp, #8
     616c:	af00      	add	r7, sp, #0
@@ -17113,7 +17114,7 @@ static void configure_gpio(void) {
 
 00006198 <configure_i2c>:
 
-void configure_i2c(void)
+static void configure_i2c(void)
 {
     6198:	b580      	push	{r7, lr}
     619a:	b08e      	sub	sp, #56	; 0x38
@@ -17175,7 +17176,8 @@ void configure_i2c(void)
 
 00006200 <configure_adc>:
 
-static void configure_adc(void) {
+static void configure_adc(void)
+{
     6200:	b580      	push	{r7, lr}
     6202:	b08c      	sub	sp, #48	; 0x30
     6204:	af00      	add	r7, sp, #0
@@ -25164,12 +25166,12 @@ int main(void)
     a48c:	43202d2d 	.word	0x43202d2d
     a490:	69706d6f 	.word	0x69706d6f
     a494:	3a64656c 	.word	0x3a64656c
-    a498:	6e614a20 	.word	0x6e614a20
-    a49c:	20393220 	.word	0x20393220
+    a498:	72614d20 	.word	0x72614d20
+    a49c:	20353120 	.word	0x20353120
     a4a0:	38313032 	.word	0x38313032
-    a4a4:	3a303220 	.word	0x3a303220
-    a4a8:	313a3931 	.word	0x313a3931
-    a4ac:	2d2d2030 	.word	0x2d2d2030
+    a4a4:	3a393120 	.word	0x3a393120
+    a4a8:	313a3635 	.word	0x313a3635
+    a4ac:	2d2d2033 	.word	0x2d2d2033
     a4b0:	0000000d 	.word	0x0000000d
     a4b4:	203d3d3d 	.word	0x203d3d3d
     a4b8:	6e6f7244 	.word	0x6e6f7244
