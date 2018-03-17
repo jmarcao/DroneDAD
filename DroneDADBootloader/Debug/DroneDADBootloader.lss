@@ -1780,8 +1780,10 @@ int main (void)
  9b2:	4b0b      	ldr	r3, [pc, #44]	; (9e0 <main+0x34>)
  9b4:	4798      	blx	r3
 
+	// Declare the application entry function pointer
 	void (*application_code_entry)(void);
 
+	// Set Main Stack Pointer to the proper address (set in Linker for Application)
 	__set_MSP(*(uint32_t*)APP_START_ADDR);
  9b6:	2380      	movs	r3, #128	; 0x80
  9b8:	019b      	lsls	r3, r3, #6
@@ -1791,12 +1793,14 @@ int main (void)
  9be:	683b      	ldr	r3, [r7, #0]
  9c0:	f383 8808 	msr	MSP, r3
 
+	// Update Vector Table Offset Register
 	SCB->VTOR = ((uint32_t)APP_START_ADDR & SCB_VTOR_TBLOFF_Msk);
  9c4:	4b07      	ldr	r3, [pc, #28]	; (9e4 <main+0x38>)
  9c6:	2280      	movs	r2, #128	; 0x80
  9c8:	0192      	lsls	r2, r2, #6
  9ca:	609a      	str	r2, [r3, #8]
 
+	// Set the function pointer.
 	application_code_entry = (void (*)(void))(unsigned*)(*(unsigned*)(APP_START_ADDR + 4));
  9cc:	4b06      	ldr	r3, [pc, #24]	; (9e8 <main+0x3c>)
  9ce:	681b      	ldr	r3, [r3, #0]

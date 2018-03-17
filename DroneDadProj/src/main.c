@@ -152,6 +152,41 @@ static void configure_adc(void)
 	adc_enable(&adc_inst);
 }
 
+
+
+#include <at25dfx.h>
+
+// Serial Setup
+#define AT25DFX_BUFFER_SIZE  (10)
+static uint8_t read_buffer[AT25DFX_BUFFER_SIZE];
+static uint8_t write_buffer[AT25DFX_BUFFER_SIZE] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+struct spi_module at25dfx_spi;
+struct at25dfx_chip_module at25dfx_chip;
+
+static void at25dfx_init(void)
+{
+	enum status_code status;
+	struct at25dfx_chip_config at25dfx_chip_config;
+	struct spi_config at25dfx_spi_config;
+	spi_get_config_defaults(&at25dfx_spi_config);
+	at25dfx_spi_config.mode_specific.master.baudrate = 120000; // 120kHz - AT25DFX_CLOCK_SPEED;
+	at25dfx_spi_config.mux_setting = SPI_SIGNAL_MUX_SETTING_E; // AT25DFX_SPI_PINMUX_SETTING;
+	at25dfx_spi_config.pinmux_pad0 = PINMUX_PA16C_SERCOM1_PAD0; // MISO - AT25DFX_SPI_PINMUX_PAD0;
+	at25dfx_spi_config.pinmux_pad1 = PINMUX_UNUSED; // CS - AT25DFX_SPI_PINMUX_PAD1;
+	at25dfx_spi_config.pinmux_pad2 = PINMUX_PA18C_SERCOM1_PAD2; // MOSI - AT25DFX_SPI_PINMUX_PAD2;
+	at25dfx_spi_config.pinmux_pad3 = PINMUX_PA19C_SERCOM1_PAD3; // SCK - AT25DFX_SPI_PINMUX_PAD3;
+	status = spi_init(&at25dfx_spi, SERCOM1 /*AT25DFX_SPI*/, &at25dfx_spi_config);
+	spi_enable(&at25dfx_spi);
+	
+	at25dfx_chip_config.type = AT25DFX_081A; // AT25DFX_MEM_TYPE;
+	at25dfx_chip_config.cs_pin = PINMUX_PA17C_SERCOM1_PAD1; // AT25DFX_CS;
+	status = at25dfx_chip_init(&at25dfx_chip, &at25dfx_spi, &at25dfx_chip_config);
+}
+
+
+
+
+
 /**
  * \brief Main application function.
  *
@@ -180,6 +215,21 @@ int main(void)
 	configure_gpio();
 	configure_adc();
 	configure_i2c();
+	
+	at25dfx_init();
+	at25dfx_chip_wake(&at25dfx_chip);
+			
+	if (at25dfx_chip_check_presence(&at25dfx_chip) != STATUS_OK) {
+		// Handle missing or non-responsive device
+		while(1) { }
+	}
+	at25dfx_chip_read_buffer(&at25dfx_chip, 0x0000, read_buffer, AT25DFX_BUFFER_SIZE);
+	at25dfx_chip_set_sector_protect(&at25dfx_chip, 0x10000, false);
+	at25dfx_chip_erase_block(&at25dfx_chip, 0x10000, AT25DFX_BLOCK_SIZE_4KB);
+	at25dfx_chip_write_buffer(&at25dfx_chip, 0x10000, write_buffer, AT25DFX_BUFFER_SIZE);
+	at25dfx_chip_set_global_sector_protect(&at25dfx_chip, true);
+	at25dfx_chip_sleep(&at25dfx_chip);
+	
 		
 	/* Do our own initialization for CLI */
 	init_cmd_list(); // Creates the help struct.

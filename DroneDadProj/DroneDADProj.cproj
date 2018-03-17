@@ -33,11 +33,12 @@
         <options>
           <option id="common.boards" value="Add" config="" content-id="Atmel.ASF" />
           <option id="common.components.wifi.winc1500" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="sam0.components.sensor.at30tse75x" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.drivers.adc" value="Add" config="callback" content-id="Atmel.ASF" />
           <option id="sam0.drivers.port" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.drivers.sercom.i2c.master" value="Add" config="callback" content-id="Atmel.ASF" />
           <option id="sam0.utils.stdio.stdio_serial" value="Add" config="" content-id="Atmel.ASF" />
-          <option id="sam0.components.sensor.at30tse75x" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="common2.components.memory.serial_flash.at25dfx" value="Add" config="polled_spi" content-id="Atmel.ASF" />
           <option id="common.components.wifi.winc1500.chip_info_example" value="Add" config="" content-id="Atmel.ASF" />
           <option id="common.utils" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.utils" value="Add" config="" content-id="Atmel.ASF" />
@@ -319,6 +320,11 @@
           <file path="src/ASF/sam0/components/sensor/at30tse75x/at30tse75x.h" framework="" version="3.35.1" source="sam0\components\sensor\at30tse75x\at30tse75x.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/sam0/components/sensor/at30tse75x/quick_start/qs_at30tse75x.h" framework="" version="3.35.1" source="sam0\components\sensor\at30tse75x\quick_start\qs_at30tse75x.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/Config/conf_at30tse75x.h" framework="" version="3.35.1" source="sam0\components\sensor\at30tse75x\module_config\conf_at30tse75x.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/common2/components/memory/serial_flash/at25dfx/at25dfx.c" framework="" version="3.35.1" source="common2\components\memory\serial_flash\at25dfx\at25dfx.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/common2/components/memory/serial_flash/at25dfx/at25dfx.h" framework="" version="3.35.1" source="common2\components\memory\serial_flash\at25dfx\at25dfx.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/common2/components/memory/serial_flash/at25dfx/quick_start_basic/qs_at25dfx_basic.h" framework="" version="3.35.1" source="common2\components\memory\serial_flash\at25dfx\quick_start_basic\qs_at25dfx_basic.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled/at25dfx_hal.h" framework="" version="3.35.1" source="common2\components\memory\serial_flash\at25dfx\hal\spi_polled\at25dfx_hal.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled/at25dfx_priv_hal.h" framework="" version="3.35.1" source="common2\components\memory\serial_flash\at25dfx\hal\spi_polled\at25dfx_priv_hal.h" changed="False" content-id="Atmel.ASF" />
         </files>
         <documentation help="http://asf.atmel.com/docs/3.35.1/common.components.wifi.winc1500.chip_info_example.samw25_xplained_pro/html/index.html" />
         <offline-documentation help="" />
@@ -392,6 +398,8 @@
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
       <Value>../src/ASF/sam0/components/sensor/at30tse75x</Value>
+      <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx</Value>
+      <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.level>Optimize for size (-Os)</armgcc.compiler.optimization.level>
@@ -453,6 +461,8 @@
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
       <Value>../src/ASF/sam0/components/sensor/at30tse75x</Value>
+      <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx</Value>
+      <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
     </ListValues>
   </armgcc.assembler.general.IncludePaths>
   <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=SAMW25_XPLAINED_PRO -DEXTINT_CALLBACK_MODE=true -DSPI_CALLBACK_MODE=true -DSYSTICK_MODE -DUSART_CALLBACK_MODE=true -D__SAMD21G18A__ -DADC_CALLBACK_MODE=true -DI2C_MASTER_CALLBACK_MODE=true</armgcc.preprocessingassembler.general.AssemblerFlags>
@@ -496,6 +506,8 @@
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
       <Value>../src/ASF/sam0/components/sensor/at30tse75x</Value>
+      <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx</Value>
+      <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
     </ListValues>
   </armgcc.preprocessingassembler.general.IncludePaths>
 </ArmGcc>
@@ -563,6 +575,8 @@
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
       <Value>../src/ASF/sam0/components/sensor/at30tse75x</Value>
+      <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx</Value>
+      <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.OtherFlags>-fdata-sections</armgcc.compiler.optimization.OtherFlags>
@@ -625,6 +639,8 @@
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
       <Value>../src/ASF/sam0/components/sensor/at30tse75x</Value>
+      <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx</Value>
+      <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
     </ListValues>
   </armgcc.assembler.general.IncludePaths>
   <armgcc.assembler.debugging.DebugLevel>Default (-g)</armgcc.assembler.debugging.DebugLevel>
@@ -669,6 +685,8 @@
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
       <Value>../src/ASF/sam0/components/sensor/at30tse75x</Value>
+      <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx</Value>
+      <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
     </ListValues>
   </armgcc.preprocessingassembler.general.IncludePaths>
   <armgcc.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcc.preprocessingassembler.debugging.DebugLevel>
@@ -679,6 +697,13 @@
     <Folder Include="src\" />
     <Folder Include="src\ASF\" />
     <Folder Include="src\ASF\common2\" />
+    <Folder Include="src\ASF\common2\components\" />
+    <Folder Include="src\ASF\common2\components\memory\" />
+    <Folder Include="src\ASF\common2\components\memory\serial_flash\" />
+    <Folder Include="src\ASF\common2\components\memory\serial_flash\at25dfx\" />
+    <Folder Include="src\ASF\common2\components\memory\serial_flash\at25dfx\hal\" />
+    <Folder Include="src\ASF\common2\components\memory\serial_flash\at25dfx\hal\spi_polled\" />
+    <Folder Include="src\ASF\common2\components\memory\serial_flash\at25dfx\quick_start_basic\" />
     <Folder Include="src\ASF\common2\services\" />
     <Folder Include="src\ASF\common2\services\delay\" />
     <Folder Include="src\ASF\common2\services\delay\sam0\" />
@@ -792,6 +817,21 @@
     <Compile Include="src\adc_temp.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\ASF\common2\components\memory\serial_flash\at25dfx\at25dfx.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\ASF\common2\components\memory\serial_flash\at25dfx\at25dfx.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\ASF\common2\components\memory\serial_flash\at25dfx\quick_start_basic\qs_at25dfx_basic.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\ASF\common2\components\memory\serial_flash\at25dfx\hal\spi_polled\at25dfx_hal.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\ASF\common2\components\memory\serial_flash\at25dfx\hal\spi_polled\at25dfx_priv_hal.h">
+      <SubType>compile</SubType>
+    </None>
     <Compile Include="src\ASF\sam0\components\sensor\at30tse75x\at30tse75x.c">
       <SubType>compile</SubType>
     </Compile>

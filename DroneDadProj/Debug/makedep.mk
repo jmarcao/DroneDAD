@@ -4,6 +4,8 @@
 
 src\adc_temp.c
 
+src\ASF\common2\components\memory\serial_flash\at25dfx\at25dfx.c
+
 src\ASF\sam0\components\sensor\at30tse75x\at30tse75x.c
 
 src\ASF\sam0\drivers\adc\adc_sam_d_r_h\adc.c

@@ -2,11 +2,21 @@
 # Automatically-generated file. Do not edit or delete the file
 ################################################################################
 
+src\ASF\common2\components\memory\serial_flash\at25dfx\at25dfx.c
+
 src\ASF\sam0\drivers\port\port.c
 
 src\ASF\common2\boards\user_board\init.c
 
 src\ASF\common\utils\interrupt\interrupt_sam_nvic.c
+
+src\ASF\sam0\drivers\sercom\sercom.c
+
+src\ASF\sam0\drivers\sercom\sercom_interrupt.c
+
+src\ASF\sam0\drivers\sercom\spi\spi.c
+
+src\ASF\sam0\drivers\sercom\spi\spi_interrupt.c
 
 src\ASF\sam0\drivers\system\clock\clock_samd21_r21_da_ha1\clock.c
 
