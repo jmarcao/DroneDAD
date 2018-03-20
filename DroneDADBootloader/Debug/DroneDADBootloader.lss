@@ -27,9 +27,9 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
  11 .debug_macro  000028ed  00000000  00000000  0002d865  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_line   00004798  00000000  00000000  00030152  2**0
+ 12 .debug_line   00004796  00000000  00000000  00030152  2**0
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_str    000837b9  00000000  00000000  000348ea  2**0
+ 13 .debug_str    000837b9  00000000  00000000  000348e8  2**0
                   CONTENTS, READONLY, DEBUGGING
  14 .debug_frame  0000062c  00000000  00000000  000b80a4  2**2
                   CONTENTS, READONLY, DEBUGGING
@@ -1767,7 +1767,6 @@ void Dummy_Handler(void)
 	...
 
 000009ac <main>:
- */
 #include <asf.h>
 #define APP_START_ADDR 0x2000
 

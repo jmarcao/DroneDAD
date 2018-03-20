@@ -2933,14 +2933,14 @@ OUTPUT(DroneDADBootloader.elf elf32-littlearm)
  .debug_macro   0x00002316       0x3a src/ASF/sam0/utils/cmsis/samd21/source/gcc/startup_samd21.o
  .debug_macro   0x00002350      0x59d src/main.o
 
-.debug_line     0x00000000     0x4798
+.debug_line     0x00000000     0x4796
  .debug_line    0x00000000      0xb1e src/ASF/common2/boards/user_board/init.o
  .debug_line    0x00000b1e      0x8c7 src/ASF/common/utils/interrupt/interrupt_sam_nvic.o
  .debug_line    0x000013e5      0xcad src/ASF/sam0/drivers/system/clock/clock_samd21_r21_da_ha1/clock.o
  .debug_line    0x00002092      0xb9e src/ASF/sam0/drivers/system/clock/clock_samd21_r21_da_ha1/gclk.o
  .debug_line    0x00002c30      0x9ea src/ASF/sam0/drivers/system/system.o
  .debug_line    0x0000361a      0x650 src/ASF/sam0/utils/cmsis/samd21/source/gcc/startup_samd21.o
- .debug_line    0x00003c6a      0xb2e src/main.o
+ .debug_line    0x00003c6a      0xb2c src/main.o
 
 .debug_str      0x00000000    0x837b9
  .debug_str     0x00000000    0x7f677 src/ASF/common2/boards/user_board/init.o
