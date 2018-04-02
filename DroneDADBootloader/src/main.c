@@ -3,21 +3,29 @@
 #include <crc32.h>
 #include <stdio.h>
 
+// NVM Information
 #define NVM_NUMBER_OF_PAGES 0x1000
 #define NVM_NUMBER_OF_ROWS (NVM_NUMBER_OF_PAGES / 0x4) // 1024 rows
 
+// Flash Information
+#define MAX_APPLICATION_COUNT 3
+#define FLASH_HEADER_ADDR 0x0
+
+// NVM Locations
 #define APPLICATION_ROW 40 
 #define APP_START_ADDR (APPLICATION_ROW * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE) // 0x2800 for Row 40
 #define BOOT_STATUS_ROW (NVM_NUMBER_OF_ROWS - 1) // Store boot status in second to last row. (1023)
 #define APPLICATION_METADATA_ROW (NVM_NUMBER_OF_ROWS - 2) // Store metadata inn third to last row. (1022)
 
+// Install Flags
 #define INSTALL_FLAG_TRUE 0xFF
 #define INSTALL_FLAG_FALSE 0x00
+
+// Signature and Versioning.
 #define DRONEDAD_BOOT_SIGNATURE_LENGTH 8
 #define DRONEDAD_MAJOR_VERSION 0x00 // Just to make us feel more like a legit product
 #define DRONEDAD_MINOR_VERSION 0x00
 #define DRONEDAD_REVISION 0x01 // Revision can be used just to debug, forcing a bad signature.
-
 const uint8_t DRONEDAD_BOOT_SIGNATURE[] = {0xDD, 0xAD, 0x20, 0x18, \
 	0x00, DRONEDAD_MAJOR_VERSION, DRONEDAD_MINOR_VERSION, DRONEDAD_REVISION}; // DD AD 20 18 0x00 <MajorVersion> <MinorVersion> <Revesion>
 	
@@ -35,12 +43,37 @@ struct application_metadata {
 	uint32_t data_len;
 };
 
-#define MAX_APPLICATION_COUNT 3
-#define FLASH_HEADER_ADDR 0x0
 struct flash_header {
 	uint32_t crc; // Maybe not necessary. Would be a CRC of address. Pushing it.
 	uint32_t metadata_addr[MAX_APPLICATION_COUNT];
 };
+
+// Serial Setup
+#define AT25DFX_BUFFER_SIZE  (512)
+static uint8_t read_buffer[AT25DFX_BUFFER_SIZE] = { 0 };
+static uint8_t write_buffer[AT25DFX_BUFFER_SIZE] = { 0 };
+struct spi_module at25dfx_spi;
+struct at25dfx_chip_module at25dfx_chip;
+
+static void at25dfx_init(void)
+{
+	enum status_code status;
+	struct at25dfx_chip_config at25dfx_chip_config;
+	struct spi_config at25dfx_spi_config;
+	spi_get_config_defaults(&at25dfx_spi_config);
+	at25dfx_spi_config.mode_specific.master.baudrate = 120000; // 120kHz - AT25DFX_CLOCK_SPEED;
+	at25dfx_spi_config.mux_setting = SPI_SIGNAL_MUX_SETTING_E; // AT25DFX_SPI_PINMUX_SETTING;
+	at25dfx_spi_config.pinmux_pad0 = PINMUX_PA16C_SERCOM1_PAD0; // MISO - AT25DFX_SPI_PINMUX_PAD0;
+	at25dfx_spi_config.pinmux_pad1 = PINMUX_UNUSED; // CS - AT25DFX_SPI_PINMUX_PAD1;
+	at25dfx_spi_config.pinmux_pad2 = PINMUX_PA18C_SERCOM1_PAD2; // MOSI - AT25DFX_SPI_PINMUX_PAD2;
+	at25dfx_spi_config.pinmux_pad3 = PINMUX_PA19C_SERCOM1_PAD3; // SCK - AT25DFX_SPI_PINMUX_PAD3;
+	status = spi_init(&at25dfx_spi, SERCOM1 /*AT25DFX_SPI*/, &at25dfx_spi_config);
+	spi_enable(&at25dfx_spi);
+	
+	at25dfx_chip_config.type = AT25DFX_081A; // AT25DFX_MEM_TYPE;
+	at25dfx_chip_config.cs_pin = PIN_PA07; // AT25DFX_CS;
+	status = at25dfx_chip_init(&at25dfx_chip, &at25dfx_spi, &at25dfx_chip_config);
+}
 
 void nvm_init(void)
 {
@@ -117,32 +150,6 @@ void get_boot_status_default(struct boot_status* bs) {
 	bs->application_star_addr = APP_START_ADDR;
 }
 
-// Serial Setup
-#define AT25DFX_BUFFER_SIZE  (512)
-static uint8_t read_buffer[AT25DFX_BUFFER_SIZE] = { 0 };
-static uint8_t write_buffer[AT25DFX_BUFFER_SIZE] = { 0 };
-struct spi_module at25dfx_spi;
-struct at25dfx_chip_module at25dfx_chip;
-
-static void at25dfx_init(void)
-{
-	enum status_code status;
-	struct at25dfx_chip_config at25dfx_chip_config;
-	struct spi_config at25dfx_spi_config;
-	spi_get_config_defaults(&at25dfx_spi_config);
-	at25dfx_spi_config.mode_specific.master.baudrate = 120000; // 120kHz - AT25DFX_CLOCK_SPEED;
-	at25dfx_spi_config.mux_setting = SPI_SIGNAL_MUX_SETTING_E; // AT25DFX_SPI_PINMUX_SETTING;
-	at25dfx_spi_config.pinmux_pad0 = PINMUX_PA16C_SERCOM1_PAD0; // MISO - AT25DFX_SPI_PINMUX_PAD0;
-	at25dfx_spi_config.pinmux_pad1 = PINMUX_UNUSED; // CS - AT25DFX_SPI_PINMUX_PAD1;
-	at25dfx_spi_config.pinmux_pad2 = PINMUX_PA18C_SERCOM1_PAD2; // MOSI - AT25DFX_SPI_PINMUX_PAD2;
-	at25dfx_spi_config.pinmux_pad3 = PINMUX_PA19C_SERCOM1_PAD3; // SCK - AT25DFX_SPI_PINMUX_PAD3;
-	status = spi_init(&at25dfx_spi, SERCOM1 /*AT25DFX_SPI*/, &at25dfx_spi_config);
-	spi_enable(&at25dfx_spi);
-	
-	at25dfx_chip_config.type = AT25DFX_081A; // AT25DFX_MEM_TYPE;
-	at25dfx_chip_config.cs_pin = PIN_PA07; // AT25DFX_CS;
-	status = at25dfx_chip_init(&at25dfx_chip, &at25dfx_spi, &at25dfx_chip_config);
-}
 
 /*
  * An error has occurred. This loop will blink the LED in a distinct way to let the user know
@@ -204,17 +211,17 @@ enum status_code dd_flash_write_data(uint32_t addr, uint8_t* buffer, uint32_t bu
 	
 	// Determine block size to erase.
 	enum at25dfx_block_size block_size;
-	if(buffer_len < 4096) {
+	if(buffer_len <= 4096) {
 		block_size = AT25DFX_BLOCK_SIZE_4KB;
 	}
-	else if(buffer_len < 32768) {
+	else if(buffer_len <= 32768) {
 		block_size = AT25DFX_BLOCK_SIZE_32KB;
 	}
 	else {
 		block_size = AT25DFX_BLOCK_SIZE_64KB;
 	}
 	
-	status = at25dfx_chip_erase_block(&at25dfx_chip, addr, block_size); // TODO: Must dynamically find out block size.
+	status = at25dfx_chip_erase_block(&at25dfx_chip, addr, block_size);
 	if(status != STATUS_OK) {
 		return status;
 	}
