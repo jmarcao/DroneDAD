@@ -52,6 +52,9 @@
  * running the ASF driver selector tool. Any changes will be discarded.
  */
 
+// From module: CRC32 - 32-bit cyclic redundancy check
+#include <crc32.h>
+
 // From module: Common SAM0 compiler driver
 #include <compiler.h>
 #include <status_codes.h>
@@ -59,17 +62,41 @@
 // From module: Common build items for user board support templates
 #include <user_board.h>
 
+// From module: Common files for AT25DFx SerialFlash drivers
+#include <at25dfx.h>
+
 // From module: Generic board support
 #include <board.h>
 
 // From module: Interrupt management - SAM implementation
 #include <interrupt.h>
 
+// From module: NVM - Non-Volatile Memory
+#include <nvm.h>
+
+// From module: PAC - Peripheral Access Controller
+#include <pac.h>
+
 // From module: PORT - GPIO Pin Control
 #include <port.h>
 
 // From module: Part identification macros
 #include <parts.h>
+
+// From module: SERCOM Callback API
+#include <sercom.h>
+#include <sercom_interrupt.h>
+
+// From module: SERCOM SPI - Serial Peripheral Interface (Callback APIs)
+#include <spi.h>
+#include <spi_interrupt.h>
+
+// From module: SERCOM SPI - Serial Peripheral Interface (Master Mode, Vectored I/O)
+#include <spi_master_vec.h>
+
+// From module: SERCOM USART - Serial Communications (Callback APIs)
+#include <usart.h>
+#include <usart_interrupt.h>
 
 // From module: SYSTEM - Clock Management for SAMD21/R21/DA/HA
 #include <clock.h>
@@ -89,5 +116,15 @@
 
 // From module: SYSTEM - Reset Management for SAM D20/D21/R21/D09/D10/D11/DA/HA
 #include <reset.h>
+
+// From module: Standard serial I/O (stdio)
+#include <stdio_serial.h>
+
+// From module: USART - Serial interface- SAM implementation for devices with only USART
+#include <serial.h>
+
+// From module: WDT - Watchdog Timer (Callback APIs)
+#include <wdt.h>
+#include <wdt_callback.h>
 
 #endif // ASF_H

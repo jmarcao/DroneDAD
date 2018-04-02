@@ -71,6 +71,7 @@ static void serial_init(void)
 
 int main (void)
 {
+	
 	system_init();
 	at25dfx_init();
 	dsu_crc32_init();
@@ -129,7 +130,10 @@ int main (void)
 	enum status_code error_code;
 	do
 	{
-		error_code = nvm_erase_row(100 * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE);
+		uint32_t addr = 100 * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE;
+		addr -= 1;
+		addr += 1;
+		error_code = nvm_erase_row(addr);
 	} while (error_code == STATUS_BUSY);
 	do
 	{
