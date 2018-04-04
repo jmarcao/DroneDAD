@@ -44,7 +44,7 @@ struct application_metadata {
 };
 
 struct flash_header {
-	uint32_t crc; // Maybe not necessary. Would be a CRC of address. Pushing it.
+	uint32_t crc; // Maybe not necessary. Would be a CRC of address.
 	uint32_t metadata_addr[MAX_APPLICATION_COUNT];
 };
 
@@ -73,6 +73,33 @@ static void at25dfx_init(void)
 	at25dfx_chip_config.type = AT25DFX_081A; // AT25DFX_MEM_TYPE;
 	at25dfx_chip_config.cs_pin = PIN_PA07; // AT25DFX_CS;
 	status = at25dfx_chip_init(&at25dfx_chip, &at25dfx_spi, &at25dfx_chip_config);
+}
+
+void watchdog_early_warning_callback(void)
+{
+    port_pin_set_output_level(PIN_PA23, false);
+}
+void configure_wdt(void)
+{
+    /* Create a new configuration structure for the Watchdog settings and fill
+     * with the default module settings. */
+    struct wdt_conf config_wdt;
+    wdt_get_config_defaults(&config_wdt);
+	
+    /* Set the Watchdog configuration settings */
+    config_wdt.always_on            = false;
+    config_wdt.clock_source         = GCLK_GENERATOR_4;
+    config_wdt.timeout_period       = WDT_PERIOD_4096CLK;
+    config_wdt.early_warning_period = WDT_PERIOD_2048CLK;
+	
+    /* Initialize and enable the Watchdog with the user settings */
+    wdt_set_config(&config_wdt);
+}
+void configure_wdt_callbacks(void)
+{
+    wdt_register_callback(watchdog_early_warning_callback,
+        WDT_CALLBACK_EARLY_WARNING);
+    wdt_enable_callback(WDT_CALLBACK_EARLY_WARNING);
 }
 
 void nvm_init(void)
@@ -396,6 +423,13 @@ int main (void) {
 	system_init();
 	nvm_init();
 	at25dfx_init();
+	dsu_crc32_init();
+	// Enable watchdogs, kick by calling wdt_reset_count() -- Only when ready! Already tested.
+	configure_wdt();
+	configure_wdt_callbacks();
+	system_interrupt_enable_global();
+	
+	while(true) { }
 	
 	// Get our boot status
 	struct boot_status bs;
