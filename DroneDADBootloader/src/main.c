@@ -424,12 +424,10 @@ int main (void) {
 	nvm_init();
 	at25dfx_init();
 	dsu_crc32_init();
-	// Enable watchdogs, kick by calling wdt_reset_count() -- Only when ready! Already tested.
-	configure_wdt();
-	configure_wdt_callbacks();
-	system_interrupt_enable_global();
-	
-	while(true) { }
+	// Enable watchdogs, kick by calling wdt_reset_count() -- Only when ready!
+	//configure_wdt();
+	//configure_wdt_callbacks();
+	//system_interrupt_enable_global();
 	
 	// Get our boot status
 	struct boot_status bs;

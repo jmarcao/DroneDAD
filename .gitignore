@@ -1,2 +1,4 @@
-*.d
-*.o
+DroneDADApplication/Debug
+DroneDADApplication/Release
+DroneDADBootloader/Debug
+DroneDADBootloader/Release
