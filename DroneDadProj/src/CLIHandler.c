@@ -428,13 +428,14 @@ void handle_mcu_temp() {
 
 void handle_i2c_scan() {
 	
-	  for(char slave_address = 0; slave_address <= 127; slave_address++) {
+	  for(char slave_address = 1; slave_address <= 127; slave_address++) {
 		  enum status_code i2c_status;
 		  wr_packet.address     = slave_address;
 		  wr_packet.data_length = 1;
 		  wr_buffer[0]          = 0x00;
 		  wr_packet.data        = wr_buffer;
 		  i2c_status = i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &wr_packet);
+		  printf("Addr is %d \r\n", slave_address);
 		  if( i2c_status == STATUS_OK ) {
 			  //i2c_status = i2c_master_read_packet_wait(&i2c_master_instance, &rd_packet);
 			 printf("The slave address is %.2x \r\n", slave_address);

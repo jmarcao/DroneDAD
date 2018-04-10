@@ -57,6 +57,122 @@ void nvm_init(void)
 	nvm_set_config(&config_nvm);
 }
 
+// Flash Information
+#define MAX_APPLICATION_COUNT 3
+#define FLASH_HEADER_ADDR 0x0
+
+struct application_metadata {
+	uint32_t index;
+	uint32_t crc;
+	uint32_t start_addr;
+	uint32_t data_len;
+};
+
+struct flash_header {
+	uint32_t crc; // Maybe not necessary. Would be a CRC of address.
+	uint32_t metadata_addr[MAX_APPLICATION_COUNT];
+};
+
+enum status_code dd_flash_read_data(uint32_t addr, uint8_t* buffer, uint32_t buffer_len) {
+	enum status_code status;
+	
+	status = at25dfx_chip_wake(&at25dfx_chip);
+	if(status != STATUS_OK) {
+		return status;
+	}
+	
+	status = at25dfx_chip_read_buffer(&at25dfx_chip, addr, buffer, buffer_len);
+	if(status != STATUS_OK) {
+		return status;
+	}
+	
+	status = at25dfx_chip_sleep(&at25dfx_chip);
+	if(status != STATUS_OK) {
+		return status;
+	}
+	
+	return status;
+};
+
+enum status_code dd_flash_write_data(uint32_t addr, uint8_t* buffer, uint32_t buffer_len) {
+	enum status_code status;
+	
+	status = at25dfx_chip_wake(&at25dfx_chip);
+	if(status != STATUS_OK) {
+		return status;
+	}
+	
+	status = at25dfx_chip_set_sector_protect(&at25dfx_chip, addr, false);
+	if(status != STATUS_OK) {
+		return status;
+	}
+	
+	// Determine block size to erase.
+	enum at25dfx_block_size block_size;
+	if(buffer_len <= 4096) {
+		block_size = AT25DFX_BLOCK_SIZE_4KB;
+	}
+	else if(buffer_len <= 32768) {
+		block_size = AT25DFX_BLOCK_SIZE_32KB;
+	}
+	else {
+		block_size = AT25DFX_BLOCK_SIZE_64KB;
+	}
+	
+	status = at25dfx_chip_erase_block(&at25dfx_chip, addr, block_size);
+	if(status != STATUS_OK) {
+		return status;
+	}
+	
+	status = at25dfx_chip_write_buffer(&at25dfx_chip, addr, buffer, buffer_len);
+	if(status != STATUS_OK) {
+		return status;
+	}
+	
+	status = at25dfx_chip_set_global_sector_protect(&at25dfx_chip, true);
+	if(status != STATUS_OK) {
+		return status;
+	}
+	
+	status = at25dfx_chip_sleep(&at25dfx_chip);
+	if(status != STATUS_OK) {
+		return status;
+	}
+	
+	return status;
+};
+
+enum status_code get_application_metadata_addr(uint8_t index, uint32_t* addr) {
+	enum status_code status;
+	struct flash_header fh;
+	
+	status = dd_flash_read_data(FLASH_HEADER_ADDR, &fh, sizeof (struct flash_header));
+	if(status != STATUS_OK) {
+		return status;
+	}
+	
+	*addr = fh.metadata_addr[index];
+	
+	return status;
+}
+
+enum status_code get_application_metadata(uint8_t index, struct application_metadata* am) {
+	enum status_code status;
+	uint32_t metadata_addr;
+	
+	status = get_application_metadata_addr(index, &metadata_addr);
+	if(status != STATUS_OK) {
+		return status;
+	}
+	
+	status = dd_flash_read_data(metadata_addr, am, sizeof(struct application_metadata));
+	if(status != STATUS_OK) {
+		return status;
+	}
+	
+	return status;
+};
+
 /**
  * \brief Configure UART console.
  */
@@ -224,13 +340,6 @@ static inline bool is_state_set(download_state mask)
 	*/
 static void start_download(void)
 {
-/*
-	if (!is_state_set(STORAGE_READY)) {
-		printf("start_download: MMC storage not ready.\r\n");
-		return;
-	}
-	*/
-
 	if (!is_state_set(WIFI_CONNECTED)) {
 		printf("start_download: Wi-Fi is not connected.\r\n");
 		return;
@@ -258,7 +367,11 @@ static void start_download(void)
 	*/
 static void store_file_packet(char *data, uint32_t length)
 {
-	printf("Data!");
+	printf("Got data: ");
+	fwrite(data, sizeof char, length, stdout);
+	printf("\n\r");
+	
+	
 }
 
 /**
@@ -292,10 +405,12 @@ static void http_client_callback(struct http_client_module *module_inst, int typ
 			add_state(CANCELED);
 			return;
 		}
+		
 		if (data->recv_response.content_length <= MAIN_BUFFER_MAX_SIZE) {
 			store_file_packet(data->recv_response.content, data->recv_response.content_length);
 			add_state(COMPLETED);
 		}
+		
 		break;
 
 	case HTTP_CLIENT_CALLBACK_RECV_CHUNKED_DATA:
