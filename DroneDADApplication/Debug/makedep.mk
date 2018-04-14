@@ -50,9 +50,13 @@ src\ASF\sam0\drivers\rtc\rtc_sam_d_r_h\rtc_calendar.c
 
 src\ASF\sam0\drivers\rtc\rtc_sam_d_r_h\rtc_calendar_interrupt.c
 
+src\ASF\sam0\drivers\sercom\i2c\i2c_sam0\i2c_master.c
+
 src\ASF\sam0\drivers\tcc\tcc.c
 
 src\ASF\sam0\drivers\tcc\tcc_callback.c
+
+src\GyroscopeDriver.c
 
 src\ASF\sam0\drivers\dsu\crc32\crc32.c
 

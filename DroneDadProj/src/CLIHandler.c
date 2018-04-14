@@ -442,5 +442,6 @@ void handle_i2c_scan() {
 		  }
 		  i2c_master_send_stop(&i2c_master_instance);
 	 }
+	 int i = 0;
 	
 }

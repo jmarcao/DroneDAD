@@ -367,11 +367,7 @@ static void start_download(void)
 	*/
 static void store_file_packet(char *data, uint32_t length)
 {
-	printf("Got data: ");
-	fwrite(data, sizeof char, length, stdout);
-	printf("\n\r");
-	
-	
+	printf("Data");
 }
 
 /**
@@ -586,13 +582,38 @@ static void configure_http_client(void)
 		
 	http_client_register_callback(&http_client_module_inst, http_client_callback);
 }
-	
+
+#include "LEDDriver.h"
+#include "GyroscopeDriver.h"
+
+#define DATA_LENGTH 8
+static uint8_t wr_buffer[DATA_LENGTH] = {
+	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
+};
+static struct i2c_master_packet wr_packet = {
+	.address          = 0,
+	.data_length      = DATA_LENGTH,
+	.data             = wr_buffer,
+	.ten_bit_address  = false,
+	.high_speed       = false,
+	.hs_master_code   = 0x00,
+};
+
 int main (void) {
 	/* Initialize the board. */
 	system_init();
 	at25dfx_init();
 	dsu_crc32_init();
 	nvm_init();
+	configure_i2c();
+	delay_init();
+	lp3944_init();
+	lsm6ds3_init();
+	
+	float temp;
+	temp = readTempF();
+	
+	while(1) {}	
 		
 	tstrWifiInitParam param;
 	int8_t ret;

@@ -141,11 +141,11 @@ static void configure_i2c(void)
 	i2c_master_get_config_defaults(&config_i2c_master);
 	/* Change buffer timeout to something longer */
 	config_i2c_master.buffer_timeout    = 65535;
-	config_i2c_master.pinmux_pad0       = PINMUX_PA22D_SERCOM5_PAD0;
-	config_i2c_master.pinmux_pad1       = PINMUX_PA23D_SERCOM5_PAD1;
+	config_i2c_master.pinmux_pad0       = PINMUX_PA08C_SERCOM0_PAD0;
+	config_i2c_master.pinmux_pad1       = PINMUX_PA09C_SERCOM0_PAD1;
 	config_i2c_master.generator_source  = GCLK_GENERATOR_0;
 	/* Initialize and enable device with config */
-	while(i2c_master_init(&i2c_master_instance, SERCOM5, &config_i2c_master) != STATUS_OK);
+	while(i2c_master_init(&i2c_master_instance, SERCOM0, &config_i2c_master) != STATUS_OK);
 	i2c_master_enable(&i2c_master_instance);
 }
 
@@ -228,10 +228,10 @@ int main(void)
 	
 	configure_ftdi_reset();
 	
-	/*
 	at25dfx_init();
 	at25dfx_chip_wake(&at25dfx_chip);
 			
+	/*
 	if (at25dfx_chip_check_presence(&at25dfx_chip) != STATUS_OK) {
 		// Handle missing or non-responsive device
 		while(1) { }
@@ -242,7 +242,9 @@ int main(void)
 	at25dfx_chip_write_buffer(&at25dfx_chip, 0x10000, write_buffer, AT25DFX_BUFFER_SIZE);
 	at25dfx_chip_set_global_sector_protect(&at25dfx_chip, true);
 	at25dfx_chip_sleep(&at25dfx_chip);
+	*/
 	
+	handle_i2c_scan();
 	
 		
 	/* Do our own initialization for CLI */
