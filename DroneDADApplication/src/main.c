@@ -626,18 +626,16 @@ int main (void) {
 	delay_init();
 	lp3944_init();
 	lsm6ds3_init();
+
+	set_led(LP3944_LED1, LED_ON);
 	
+	struct lsm6ds3_output_data data;
 	while(1) {
-		float ax, ay, az, gx, gy, gz;
-		ax = readFloatAccelX();
-		ay = readFloatAccelY();
-		az = readFloatAccelZ();
-		gx = readFloatGyroX();
-		gy = readFloatGyroY();
-		gz = readFloatGyroZ();
-		
-		printf("===Reading===\r\n");
-		printf("Ax = %d\r\nAy = %d\r\nAz = %d\r\nGx = %d\r\nGy = %d\r\nGz = %d\r\n", ax, ay, az, gx, gy, gz);
+		if(lsm6ds3_dataReady()) {
+			lsm6ds3_readAllData(&data);
+			printf("===Reading===\r\n");
+			printf("Ax = %f\r\nAy = %f\r\nAz = %f\r\nGx = %f\r\nGy = %f\r\nGz = %f\r\n", data.ax, data.ay, data.az, data.gx, data.gy, data.gz);
+		}
 	}
 		
 	tstrWifiInitParam param;

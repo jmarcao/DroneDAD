@@ -27,6 +27,22 @@ It has been modifed and adapted to work with the SAMD21/SAMW25
 
 #define LSM6DS3_SLAVE_ADDR 0x6A
 
+// Struct for holding the data read from the LSM6DS3
+struct lsm6ds3_output_data {
+	// Acceleration
+	float ax;
+	float ay;
+	float az;
+	// Gyroscope
+	float gx;
+	float gy;
+	float gz;
+};
+
+bool lsm6ds3_dataReady();
+void lsm6ds3_readAllData(struct lsm6ds3_output_data* output);
+void lsm6ds3_readAllRawData(struct lsm6ds3_output_data* output);
+
 #define MAX_DATA_LEN 10
 static uint8_t lsm6ds3_wr_buffer[MAX_DATA_LEN];
 static struct i2c_master_packet lsm6ds3_wr_packet = {
@@ -107,9 +123,6 @@ struct SensorSettings {
 	
 	//Temperature settings
 	uint8_t tempEnabled;
-	
-	//Non-basic mode settings
-	uint8_t commMode;
 	
 	//FIFO control data
 	uint16_t fifoThreshold;

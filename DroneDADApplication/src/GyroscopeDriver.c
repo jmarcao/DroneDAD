@@ -21,17 +21,11 @@ struct SensorSettings settings;
 
 extern struct i2c_master_module i2c_master_instance;
 
-status_t beginCore(void)
+status_t checkChipPrecense(void)
 {
 	status_t returnError = IMU_SUCCESS;
 
-	//Spin for a few ms
-	volatile uint8_t temp = 0;
-	for( uint16_t i = 0; i < 10000; i++ ) {
-		temp++;
-	}
-
-	//Check the ID register to determine if the operation was a success.
+	//Check the ID register to confirm we are who we think we are.
 	uint8_t readCheck;
 	readRegister(&readCheck, LSM6DS3_ACC_GYRO_WHO_AM_I_REG);
 	if( readCheck != 0x69 ) {
@@ -183,23 +177,20 @@ void setDefaultSettings()
 	//Construct with these default settings
 	settings.gyroEnabled = 1;  //Can be 0 or 1
 	settings.gyroRange = 2000;   //Max deg/s.  Can be: 125, 245, 500, 1000, 2000
-	settings.gyroSampleRate = 416;   //Hz.  Can be: 13, 26, 52, 104, 208, 416, 833, 1666
+	settings.gyroSampleRate = 13;   //Hz.  Can be: 13, 26, 52, 104, 208, 416(def), 833, 1666
 	settings.gyroBandWidth = 400;  //Hz.  Can be: 50, 100, 200, 400;
-	settings.gyroFifoEnabled = 1;  //Set to include gyro in FIFO
+	settings.gyroFifoEnabled = 0;  //Set to include gyro in FIFO
 	settings.gyroFifoDecimation = 1;  //set 1 for on /1
 
 	settings.accelEnabled = 1;
 	settings.accelODROff = 1;
 	settings.accelRange = 16;      //Max G force readable.  Can be: 2, 4, 8, 16
-	settings.accelSampleRate = 416;  //Hz.  Can be: 13, 26, 52, 104, 208, 416, 833, 1666, 3332, 6664, 13330
-	settings.accelBandWidth = 100;  //Hz.  Can be: 50, 100, 200, 400;
-	settings.accelFifoEnabled = 1;  //Set to include accelerometer in the FIFO
+	settings.accelSampleRate = 13;  //Hz.  Can be: 13, 26, 52, 104, 208, 416(def), 833, 1666, 3332, 6664, 13330
+	settings.accelBandWidth = 400;  //Hz.  Can be: 50, 100, 200, 400;
+	settings.accelFifoEnabled = 0;  //Set to include accelerometer in the FIFO
 	settings.accelFifoDecimation = 1;  //set 1 for on /1
 
 	settings.tempEnabled = 1;
-
-	//Select interface mode
-	settings.commMode = 1;  //Can be modes 1, 2 or 3
 
 	//FIFO control data
 	settings.fifoThreshold = 3000;  //Can be 0 to 4096 (16 bit bytes)
@@ -225,7 +216,7 @@ status_t begin()
 	uint8_t dataToWrite = 0;  //Temporary variable
 
 	//Begin the inherited core.  This gets the physical wires connected
-	status_t returnError = beginCore();
+	status_t returnError = checkChipPrecense();
 
 	//Setup the accelerometer******************************
 	dataToWrite = 0; //Start Fresh!
@@ -697,9 +688,50 @@ void fifoEnd( void ) {
 	writeRegister(LSM6DS3_ACC_GYRO_FIFO_STATUS1, 0x00);  //Disable
 }
 
+void enableGyroscope() {
+	writeRegister(LSM6DS3_ACC_GYRO_CTRL10_C, 0x38);
+	writeRegister(LSM6DS3_ACC_GYRO_CTRL2_G, 0x60);
+}
+
+void enableAccelero() {
+	writeRegister(LSM6DS3_ACC_GYRO_CTRL9_XL, 0x38);
+	writeRegister(LSM6DS3_ACC_GYRO_CTRL1_XL, 0x60);
+}
+
 void lsm6ds3_init() {
 	status_t status;
-	status = beginCore();
-	status = setDefaultSettings();
+	status = checkChipPrecense();
+	setDefaultSettings();
+	//enableAccelero();
+	//enableGyroscope();
 	status = begin();
+}
+
+bool lsm6ds3_dataReady() {
+	uint8_t data;
+
+	readRegister(&data, LSM6DS3_ACC_GYRO_STATUS_REG);
+	if(data & LSM6DS3_ACC_GYRO_XLDA_DATA_AVAIL) {
+		return true;
+	}
+	
+	return false;
+}
+
+void lsm6ds3_readAllData(struct lsm6ds3_output_data* output) {
+	output->ax = readFloatAccelX();
+	output->ay = readFloatAccelY();
+	output->az = readFloatAccelZ();
+	output->gx = readFloatGyroX();
+	output->gy = readFloatGyroY();
+	output->gz = readFloatGyroZ();
+}
+
+void lsm6ds3_readAllRawData(struct lsm6ds3_output_data* output) {
+	output->ax = (float)0 + readRawAccelX();
+	output->ay = (float)0 + readRawAccelY();
+	output->az = (float)0 + readRawAccelZ();
+	output->gx = (float)0 + readRawGyroX();
+	output->gy = (float)0 + readRawGyroY();
+	output->gz = (float)0 + readRawGyroZ();
 }
