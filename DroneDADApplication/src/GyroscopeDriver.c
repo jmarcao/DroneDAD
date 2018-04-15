@@ -59,8 +59,8 @@ status_t beginCore(void)
 status_t readRegisterRegion(uint8_t *outputPointer , uint8_t offset, uint8_t length)
 {
 	status_t status;
-	for(int i = 0; i <= length; i++) {
-		status = readRegister(outputPointer[i], offset + i);
+	for(int i = 0; i < length; i++) {
+		status = readRegister(outputPointer + (i * sizeof(uint8_t*)), offset + i);
 		if(status != IMU_SUCCESS) {
 			return status;
 		}
@@ -123,7 +123,7 @@ status_t readRegisterInt16( int16_t* outputPointer, uint8_t offset )
 {
 	status_t status;
 	uint8_t myBuffer[2];
-	status = readRegisterRegion(myBuffer, offset, 2);  //Does memory transfer
+	status = readRegisterRegion(&myBuffer[0], offset, 2);  //Does memory transfer
 	int16_t output = (int16_t)myBuffer[0] | (int16_t)(myBuffer[1] << 8);
 	
 	*outputPointer = output;
@@ -178,7 +178,7 @@ status_t basePage( void )
 //  Construct with same rules as the core ( uint8_t busType, uint8_t inputArg )
 //
 //****************************************************************************//
-setDefaultSettings()
+void setDefaultSettings()
 {
 	//Construct with these default settings
 	settings.gyroEnabled = 1;  //Can be 0 or 1
@@ -208,7 +208,6 @@ setDefaultSettings()
 
 	allOnesCounter = 0;
 	nonSuccessCounter = 0;
-
 }
 
 //****************************************************************************//
@@ -377,14 +376,6 @@ status_t begin()
 	//Write the byte
 	writeRegister(LSM6DS3_ACC_GYRO_CTRL2_G, dataToWrite);
 
-	//Setup the internal temperature sensor
-	if ( settings.tempEnabled == 1) {
-	}
-
-	//Return WHO AM I reg  //Not no mo!
-	uint8_t result;
-	readRegister(&result, LSM6DS3_ACC_GYRO_WHO_AM_I_REG);
-
 	return returnError;
 }
 
@@ -395,7 +386,7 @@ status_t begin()
 //****************************************************************************//
 int16_t readRawAccelX( void )
 {
-	int16_t output;
+	int16_t output = 0;
 	status_t errorLevel = readRegisterInt16( &output, LSM6DS3_ACC_GYRO_OUTX_L_XL );
 	if( errorLevel != IMU_SUCCESS )
 	{
@@ -581,7 +572,6 @@ float readTempF( void )
 	output = (output * 9) / 5 + 32;
 
 	return output;
-
 }
 
 //****************************************************************************//
@@ -711,4 +701,5 @@ void lsm6ds3_init() {
 	status_t status;
 	status = beginCore();
 	status = setDefaultSettings();
+	status = begin();
 }
