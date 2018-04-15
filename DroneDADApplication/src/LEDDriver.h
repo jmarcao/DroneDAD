@@ -104,7 +104,7 @@ const lp3944_led_data LP3944_LED7 = {
 };
 
 struct i2c_master_module i2c_master_instance;
-void configure_i2c(void)
+void i2c_init(void)
 {
 	/* Initialize config structure and software module */
 	struct i2c_master_config config_i2c_master;

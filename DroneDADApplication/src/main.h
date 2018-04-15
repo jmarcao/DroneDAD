@@ -21,7 +21,6 @@ extern "C" {
 /** Content URI for download. */
 #define MAIN_HTTP_FILE_URL                   "https://www.seas.upenn.edu/~rndoshi/DroneDADMeta.meta"
 
-
 /** Maximum size for packet buffer. */
 #define MAIN_BUFFER_MAX_SIZE                 (1446)
 /** Maximum file name length. */
