@@ -330,6 +330,10 @@ static void http_client_firmware_download_req_callback(struct http_client_module
 
 		break;
 	}
+
+	if(is_state_set(COMPLETED)) {
+		finalize_firmware_update();
+	}
 }
 
 /**
