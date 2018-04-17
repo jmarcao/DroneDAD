@@ -10,7 +10,7 @@
 #define HTTPDOWNLOADER_H_
 
 /** File download processing state. */
-static download_state down_state = NOT_READY;
+static download_state dl_state = NOT_READY;
 
 /** UART module for debug. */
 static struct usart_module cdc_uart_module;
@@ -21,47 +21,38 @@ struct sw_timer_module swt_module_inst;
 /** Instance of HTTP client module. */
 struct http_client_module http_client_module_inst;
 
-/**
-	* \brief Initialize download state to not ready.
-	*/
+typedef struct {
+	char data[MAX_METADATA_BUFFER_LEN],
+	uint16_t begin;
+	uint16_t end;
+} metadata_buffer_t;
+
+static metadata_buffer_t metadata_buffer;
+
 static void wifiState_init(void)
 {
-	down_state = NOT_READY;
+	dl_state = NOT_READY;
 }
 
-/**
-	* \brief Clear state parameter at download processing state.
-	* \param[in] mask Check download_state.
-	*/
 static void clear_state(download_state mask)
 {
-	down_state &= ~mask;
+	dl_state &= ~mask;
 }
 
-/**
-	* \brief Add state parameter at download processing state.
-	* \param[in] mask Check download_state.
-	*/
 static void add_state(download_state mask)
 {
-	down_state |= mask;
+	dl_state |= mask;
 }
-
-/**
-	* \brief File download processing state check.
-	* \param[in] mask Check download_state.
-	* \return true if this state is set, false otherwise.
-	*/
 
 static inline bool is_state_set(download_state mask)
 {
-	return ((down_state & mask) != 0);
+	return ((dl_state & mask) != 0);
 }
 
 /**
 	* \brief Start file download via HTTP connection.
 	*/
-static void start_download(void)
+static void sendHttpReq_metadata(void)
 {
 	if (!is_state_set(WIFI_CONNECTED)) {
 		printf("start_download: Wi-Fi is not connected.\r\n");
@@ -80,7 +71,29 @@ static void start_download(void)
 
 	/* Send the HTTP request. */
 	printf("start_download: sending HTTP request...\r\n");
-	http_client_send_request(&http_client_module_inst, MAIN_HTTP_FILE_URL, HTTP_METHOD_GET, NULL, NULL);
+	http_client_send_request(&http_client_module_inst, URL_METADATA, HTTP_METHOD_GET, NULL, NULL);
+}
+
+static void sendHttpReq_firmware(void)
+{
+	if (!is_state_set(WIFI_CONNECTED)) {
+		printf("start_download: Wi-Fi is not connected.\r\n");
+		return;
+	}
+
+	if (is_state_set(GET_REQUESTED)) {
+		printf("start_download: request is sent already.\r\n");
+		return;
+	}
+
+	if (is_state_set(DOWNLOADING)) {
+		printf("start_download: running download already.\r\n");
+		return;
+	}
+
+	/* Send the HTTP request. */
+	printf("start_download: sending HTTP request...\r\n");
+	http_client_send_request(&http_client_module_inst, URL_METADATA, HTTP_METHOD_GET, NULL, NULL);
 }
 
 /**
@@ -88,9 +101,38 @@ static void start_download(void)
 	* \param[in] data Packet data.
 	* \param[in] length Packet data length.
 	*/
-static void store_file_packet(char *data, uint32_t length)
+static void store_metadata_file(char *data, uint32_t length)
 {
-	printf("Data");
+	/*
+	 Metadata file format
+		VMMmmrr.FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+		Version
+		 Major Number
+		   Minor Number
+		     Revision
+			    CRC-32
+	*/
+	
+	for(int i = 0; i < length; i++) {
+		metadata_buffer.data[metadata_buffer.end] = *(data + (i * sizeof(char)));
+		metadata_buffer.end++;
+	}
+}
+
+static void parse_metadata_buffer() {
+	if(metadata_buffer.data[0] != 'V') {
+		printf("Unexpected data in metadata_buffer!\r\n");
+		return;
+	}
+}
+
+static void store_firmware_file(char *data, uint32_t length)
+{
+	printf("Metadata: ");
+	for(uint32_t i = 0; i < length; i++) {
+		//printf("%c", *(data+(i * sizeof(char))));
+	}
+	printf("\r\n");
 }
 
 /**
@@ -100,40 +142,36 @@ static void store_file_packet(char *data, uint32_t length)
 	* \param[in]  type            Type of event.
 	* \param[in]  data            Data structure of the event. \refer http_client_data
 	*/
-static void http_client_callback(struct http_client_module *module_inst, int type, union http_client_data *data)
+static void http_client_metadata_req_callback(struct http_client_module *module_inst, int type, union http_client_data *data)
 {
 	switch (type) {
 	case HTTP_CLIENT_CALLBACK_SOCK_CONNECTED:
 		printf("http_client_callback: HTTP client socket connected.\r\n");
 		break;
-
 	case HTTP_CLIENT_CALLBACK_REQUESTED:
 		printf("http_client_callback: request completed.\r\n");
 		add_state(GET_REQUESTED);
 		break;
-
 	case HTTP_CLIENT_CALLBACK_RECV_RESPONSE:
 		printf("http_client_callback: received response %u data size %u\r\n",
 				(unsigned int)data->recv_response.response_code,
 				(unsigned int)data->recv_response.content_length);
-		if ((unsigned int)data->recv_response.response_code == 200) {
-			//http_file_size = data->recv_response.content_length;
-			//received_file_size = 0;
-		} 
-		else {
+				
+		if ((unsigned int)data->recv_response.response_code != 200) {
+			printf("Download canceled.");
 			add_state(CANCELED);
 			return;
 		}
 		
 		if (data->recv_response.content_length <= MAIN_BUFFER_MAX_SIZE) {
-			store_file_packet(data->recv_response.content, data->recv_response.content_length);
+			store_metadata_file(data->recv_response.content, data->recv_response.content_length);
 			add_state(COMPLETED);
 		}
 		
 		break;
 
 	case HTTP_CLIENT_CALLBACK_RECV_CHUNKED_DATA:
-		store_file_packet(data->recv_chunked_data.data, data->recv_chunked_data.length);
+		store_metadata_file(data->recv_chunked_data.data, data->recv_chunked_data.length);
 		if (data->recv_chunked_data.is_complete) {
 			add_state(COMPLETED);
 		}
@@ -158,7 +196,68 @@ static void http_client_callback(struct http_client_module *module_inst, int typ
 				clear_state(GET_REQUESTED);
 			}
 
-			start_download();
+			sendHttpReq_metadata();
+		}
+
+		break;
+	}
+}
+
+static void http_client_firmware_download_req_callback(struct http_client_module *module_inst, int type, union http_client_data *data)
+{
+	switch (type) {
+	case HTTP_CLIENT_CALLBACK_SOCK_CONNECTED:
+		printf("http_client_callback: HTTP client socket connected.\r\n");
+		break;
+	case HTTP_CLIENT_CALLBACK_REQUESTED:
+		printf("http_client_callback: request completed.\r\n");
+		add_state(GET_REQUESTED);
+		break;
+	case HTTP_CLIENT_CALLBACK_RECV_RESPONSE:
+		printf("http_client_callback: received response %u data size %u\r\n",
+				(unsigned int)data->recv_response.response_code,
+				(unsigned int)data->recv_response.content_length);
+				
+		if ((unsigned int)data->recv_response.response_code != 200) {
+			printf("Download canceled.");
+			add_state(CANCELED);
+			return;
+		}
+		
+		if (data->recv_response.content_length <= MAIN_BUFFER_MAX_SIZE) {
+			store_firmware_file(data->recv_response.content, data->recv_response.content_length);
+			add_state(COMPLETED);
+		}
+		
+		break;
+
+	case HTTP_CLIENT_CALLBACK_RECV_CHUNKED_DATA:
+		store_firmware_file(data->recv_chunked_data.data, data->recv_chunked_data.length);
+		if (data->recv_chunked_data.is_complete) {
+			add_state(COMPLETED);
+		}
+
+		break;
+
+	case HTTP_CLIENT_CALLBACK_DISCONNECTED:
+		printf("http_client_callback: disconnection reason:%d\r\n", data->disconnected.reason);
+
+		/* If disconnect reason is equal to -ECONNRESET(-104),
+			* It means the server has closed the connection (timeout).
+			* This is normal operation.
+			*/
+		if (data->disconnected.reason == -EAGAIN) {
+			/* Server has not responded. Retry immediately. */
+			if (is_state_set(DOWNLOADING)) {
+				//f_close(&file_object);
+				clear_state(DOWNLOADING);
+			}
+
+			if (is_state_set(GET_REQUESTED)) {
+				clear_state(GET_REQUESTED);
+			}
+
+			sendHttpReq_firmware();
 		}
 
 		break;
@@ -237,7 +336,7 @@ static void wifi_cb(uint8_t u8MsgType, void *pvMsg)
 		if (pstrWifiState->u8CurrState == M2M_WIFI_CONNECTED) {
 			printf("wifi_cb: M2M_WIFI_CONNECTED\r\n");
 			m2m_wifi_request_dhcp_client();
-		} else if (pstrWifiState->u8CurrState == M2M_WIFI_CONNECTED) {
+		} else if (pstrWifiState->u8CurrState == M2M_WIFI_DISCONNECTED) {
 			printf("wifi_cb: M2M_WIFI_DISCONNECTED\r\n");
 			clear_state(WIFI_CONNECTED);
 			if (is_state_set(DOWNLOADING)) {
@@ -262,7 +361,6 @@ static void wifi_cb(uint8_t u8MsgType, void *pvMsg)
 		printf("wifi_cb: IP address is %u.%u.%u.%u\r\n",
 				pu8IPAddress[0], pu8IPAddress[1], pu8IPAddress[2], pu8IPAddress[3]);
 		add_state(WIFI_CONNECTED);
-		start_download();
 		break;
 	}
 
@@ -303,10 +401,34 @@ static void configure_http_client(void)
 		} /* Loop forever. */
 	}
 		
-	http_client_register_callback(&http_client_module_inst, http_client_callback);
+	http_client_register_callback(&http_client_module_inst, http_client_metadata_req_callback);
 }
 
-void downloadFirmwareUpdate() {
+uint32_t getServerFirmwareVersion() {
+	// Set the Firmware handler callback
+	http_client_register_callback(&http_client_module_inst, http_client_metadata_req_callback);
+	
+	while (!(is_state_set(COMPLETED) || is_state_set(CANCELED))) {
+		/* Handle pending events from network controller. */
+		m2m_wifi_handle_events(NULL);
+		/* Checks the timer timeout. */
+		sw_timer_task(&swt_module_inst);
+	}
+}
+
+bool getFirmwareUpdateData() {
+	// Set the Firmware handler callback
+	http_client_register_callback(&http_client_module_inst, http_client_metadata_req_callback);
+	
+	while (!(is_state_set(COMPLETED) || is_state_set(CANCELED))) {
+		/* Handle pending events from network controller. */
+		m2m_wifi_handle_events(NULL);
+		/* Checks the timer timeout. */
+		sw_timer_task(&swt_module_inst);
+	}
+}
+
+void handleUpdateRequest() {
 	tstrWifiInitParam param;
 	int8_t ret;
 		
@@ -333,16 +455,21 @@ void downloadFirmwareUpdate() {
 	/* Connect to router. */
 	printf("main: connecting to WiFi AP %s...\r\n", (char *)MAIN_WLAN_SSID);
 	m2m_wifi_connect((char *)MAIN_WLAN_SSID, sizeof(MAIN_WLAN_SSID), MAIN_WLAN_AUTH, (char *)MAIN_WLAN_PSK, M2M_WIFI_CH_ALL);
-
-	while (!(is_state_set(COMPLETED) || is_state_set(CANCELED))) {
+	while (!(is_state_set(WIFI_CONNECTED) || is_state_set(CANCELED))) {
 		/* Handle pending events from network controller. */
 		m2m_wifi_handle_events(NULL);
 		/* Checks the timer timeout. */
 		sw_timer_task(&swt_module_inst);
 	}
-	printf("main: please unplug the SD/MMC card.\r\n");
+	
+	// Download the latest firmware metadata from the server.
+	printf("Downloading metadata....\r\n");
+	uint32_t latestVersion = getServerFirmwareVersion();
+	
 	printf("main: done.\r\n");
 }
+
+
 
 
 #endif /* HTTPDOWNLOADER_H_ */

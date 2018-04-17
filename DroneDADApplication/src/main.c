@@ -13,6 +13,9 @@ Application code
 #include "driver/include/m2m_wifi.h"
 #include "socket/include/socket.h"
 #include "iot/http/http_client.h"
+#include "LEDDriver.h"
+#include "GyroscopeDriver.h"
+#include "HttpDownloader.h"
 
 /** UART module for debug. */
 static struct usart_module cdc_uart_module;
@@ -64,7 +67,6 @@ struct application_metadata {
 };
 
 struct flash_header {
-	uint32_t crc; // Maybe not necessary. Would be a CRC of address.
 	uint32_t metadata_addr[MAX_APPLICATION_COUNT];
 };
 
@@ -268,21 +270,7 @@ void dd_app_example_test(void) {
 
 
 
-#include "LEDDriver.h"
-#include "GyroscopeDriver.h"
 
-#define DATA_LENGTH 8
-static uint8_t wr_buffer[DATA_LENGTH] = {
-	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
-};
-static struct i2c_master_packet wr_packet = {
-	.address          = 0,
-	.data_length      = DATA_LENGTH,
-	.data             = wr_buffer,
-	.ten_bit_address  = false,
-	.high_speed       = false,
-	.hs_master_code   = 0x00,
-};
 
 static void uartConsole_init(void)
 {
@@ -322,10 +310,6 @@ void initDroneDAD() {
 	nm_bsp_init();
 }
 
-void setupWifiSubsystem() {
-	
-}
-
 int main(void) {
 	// Run all Basic Initialization
 	initDroneDAD();
@@ -347,38 +331,17 @@ int main(void) {
 
 	printf("=== DroneDAD ===");
 	
-	/* Initialize the HTTP client service. */
-	configure_http_client();
+	// Get the existing fimrware metadata
+	struct flash_header header;
+	dd_flash_read_data(FLASH_HEADER_ADDR, &header, sizeof(struct flash_header));
+	header.metadata_addr[0] = 0x100;
+	header.metadata_addr[1] = 0x200;
+	header.metadata_addr[2] = 0x300;
+	dd_flash_write_data(FLASH_HEADER_ADDR, &header, sizeof(struct flash_header));
+	struct flash_header check;
+	dd_flash_read_data(FLASH_HEADER_ADDR, &check, sizeof(struct flash_header));
 	
-	/* Initialize Wi-Fi parameters structure. */
-	memset((uint8_t *)&param, 0, sizeof(tstrWifiInitParam));
-
-	/* Initialize Wi-Fi driver with data and status callbacks. */
-	param.pfAppWifiCb = wifi_cb;
-	ret = m2m_wifi_init(&param);
-	if (M2M_SUCCESS != ret) {
-		printf("main: m2m_wifi_init call error! (res %d)\r\n", ret);
-		while (1) {
-		}
-	}
-
-	/* Initialize socket module. */
-	socketInit();
-	/* Register socket callback function. */
-	registerSocketCallback(socket_cb, resolve_cb);
-
-	/* Connect to router. */
-	printf("main: connecting to WiFi AP %s...\r\n", (char *)MAIN_WLAN_SSID);
-	m2m_wifi_connect((char *)MAIN_WLAN_SSID, sizeof(MAIN_WLAN_SSID), MAIN_WLAN_AUTH, (char *)MAIN_WLAN_PSK, M2M_WIFI_CH_ALL);
-
-	while (!(is_state_set(COMPLETED) || is_state_set(CANCELED))) {
-		/* Handle pending events from network controller. */
-		m2m_wifi_handle_events(NULL);
-		/* Checks the timer timeout. */
-		sw_timer_task(&swt_module_inst);
-	}
-	printf("main: please unplug the SD/MMC card.\r\n");
-	printf("main: done.\r\n");
+	handleUpdateRequest();
 
 	while (1) {
 	} /* Loop forever. */

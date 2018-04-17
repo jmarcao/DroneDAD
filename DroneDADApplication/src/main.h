@@ -19,7 +19,11 @@ extern "C" {
 #define IPV4_BYTE(val, index)                ((val >> (index * 8)) & 0xFF)
 
 /** Content URI for download. */
-#define MAIN_HTTP_FILE_URL                   "https://www.seas.upenn.edu/~rndoshi/DroneDADMeta.meta"
+#define URL_METADATA                   "https://www.seas.upenn.edu/~jmarcao/ddad.meta"
+#define URL_LATEST_FIRMWARE            "https://www.seas.upenn.edu/~jmarcao/ddad_fw.bin"
+
+// Buffer len for metadata
+#define MAX_METADATA_BUFFER_LEN 1024
 
 /** Maximum size for packet buffer. */
 #define MAIN_BUFFER_MAX_SIZE                 (1446)
