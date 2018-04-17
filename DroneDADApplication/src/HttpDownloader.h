@@ -22,12 +22,14 @@ struct sw_timer_module swt_module_inst;
 struct http_client_module http_client_module_inst;
 
 typedef struct {
-	char data[MAX_METADATA_BUFFER_LEN],
+	char data[MAX_METADATA_BUFFER_LEN];
 	uint16_t begin;
 	uint16_t end;
 } metadata_buffer_t;
 
+#define VERSION_LENGTH 6
 static metadata_buffer_t metadata_buffer;
+static char serverVersion[VERSION_LENGTH+1];
 
 static void wifiState_init(void)
 {
@@ -102,7 +104,14 @@ static void sendHttpReq_firmware(void)
 	* \param[in] length Packet data length.
 	*/
 static void store_metadata_file(char *data, uint32_t length)
-{
+{	
+	for(int i = 0; i < length; i++) {
+		metadata_buffer.data[metadata_buffer.end] = *(data + (i * sizeof(char)));
+		metadata_buffer.end++;
+	}
+}
+
+static void parse_metadata_buffer() {
 	/*
 	 Metadata file format
 		VMMmmrr.FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -112,18 +121,17 @@ static void store_metadata_file(char *data, uint32_t length)
 		     Revision
 			    CRC-32
 	*/
-	
-	for(int i = 0; i < length; i++) {
-		metadata_buffer.data[metadata_buffer.end] = *(data + (i * sizeof(char)));
-		metadata_buffer.end++;
-	}
-}
 
-static void parse_metadata_buffer() {
 	if(metadata_buffer.data[0] != 'V') {
 		printf("Unexpected data in metadata_buffer!\r\n");
 		return;
 	}
+
+	for(int i = 0; i < VERSION_LENGTH; i++) {
+		serverVersion[i] = metadata_buffer.data[i+1];
+	}
+
+	serverVersion[VERSION_LENGTH] = '\0';
 }
 
 static void store_firmware_file(char *data, uint32_t length)
@@ -407,6 +415,7 @@ static void configure_http_client(void)
 uint32_t getServerFirmwareVersion() {
 	// Set the Firmware handler callback
 	http_client_register_callback(&http_client_module_inst, http_client_metadata_req_callback);
+	sendHttpReq_metadata();
 	
 	while (!(is_state_set(COMPLETED) || is_state_set(CANCELED))) {
 		/* Handle pending events from network controller. */
@@ -414,11 +423,14 @@ uint32_t getServerFirmwareVersion() {
 		/* Checks the timer timeout. */
 		sw_timer_task(&swt_module_inst);
 	}
+
+	uint32_t versionNumber = atoi(serverVersion);
+	return versionNumber;
 }
 
-bool getFirmwareUpdateData() {
+bool downloadFirmwareUpdate() {
 	// Set the Firmware handler callback
-	http_client_register_callback(&http_client_module_inst, http_client_metadata_req_callback);
+	http_client_register_callback(&http_client_module_inst, http_client_firmware_download_req_callback);
 	
 	while (!(is_state_set(COMPLETED) || is_state_set(CANCELED))) {
 		/* Handle pending events from network controller. */
