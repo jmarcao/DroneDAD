@@ -885,6 +885,12 @@
     <Compile Include="src\ASF\common2\components\memory\serial_flash\at25dfx\at25dfx.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\NVMStorage.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\SerialConsole.h">
+      <SubType>compile</SubType>
+    </Compile>
     <None Include="src\ASF\common\components\wifi\winc1500\bsp\include\nm_bsp_internal.h">
       <SubType>compile</SubType>
     </None>
@@ -1113,6 +1119,9 @@
     <None Include="src\ASF\sam0\drivers\tcc\tcc_callback.h">
       <SubType>compile</SubType>
     </None>
+    <Compile Include="src\FlashStorage.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\GyroscopeDriver.c">
       <SubType>compile</SubType>
     </Compile>
