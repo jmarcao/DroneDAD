@@ -19,11 +19,14 @@ extern "C" {
 #define IPV4_BYTE(val, index)                ((val >> (index * 8)) & 0xFF)
 
 /** Content URI for download. */
-#define URL_METADATA                   "http://192.168.1.8:8000/ddad.meta" //"https://www.seas.upenn.edu/~jmarcao/ddad.meta"
+#define URL_METADATA                   "https://www.seas.upenn.edu/~jmarcao/ddad.meta"
 #define URL_LATEST_FIRMWARE            "https://www.seas.upenn.edu/~jmarcao/ddad_fw.bin"
 
 // Buffer len for metadata
+#define METADATA_VERSION_LENGTH 6
 #define MAX_METADATA_BUFFER_LEN 1024
+// Buffer len for firmware
+#define MAX_FIRMWARE_BUFFER_LEN 4096
 
 /** Maximum size for packet buffer. */
 #define MAIN_BUFFER_MAX_SIZE                 (1446)

@@ -9,6 +9,9 @@
 #ifndef HTTPDOWNLOADER_H_
 #define HTTPDOWNLOADER_H_
 
+#include "FlashStorage.h"
+#include "NVMStorage.h"
+
 /** File download processing state. */
 static download_state dl_state = NOT_READY;
 
@@ -27,9 +30,19 @@ typedef struct {
 	uint16_t end;
 } metadata_buffer_t;
 
-#define VERSION_LENGTH 6
+typedef struct {
+	char data[MAX_FIRMWARE_BUFFER_LEN];
+	uint16_t begin;
+	uint16_t end;
+} firmware_buffer_t;
+
 static metadata_buffer_t metadata_buffer;
-static char serverVersion[VERSION_LENGTH+1];
+static firmware_buffer_t firmware_buffer;
+static uint32_t fw_addrToWriteTo;
+static uint32_t fw_addrMetadata;
+static uint32_t fw_rollingCRC;
+static uint32_t fw_dataLen;
+static char serverVersion[METADATA_VERSION_LENGTH+1];
 
 static void wifiState_init(void)
 {
@@ -114,7 +127,7 @@ static void store_metadata_file(char *data, uint32_t length)
 static void parse_metadata_buffer() {
 	/*
 	 Metadata file format
-		VMMmmrr.FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+		VMMmmrr.FFFFFFFF
 		Version
 		 Major Number
 		   Minor Number
@@ -127,20 +140,67 @@ static void parse_metadata_buffer() {
 		return;
 	}
 
-	for(int i = 0; i < VERSION_LENGTH; i++) {
+	for(int i = 0; i < METADATA_VERSION_LENGTH; i++) {
 		serverVersion[i] = metadata_buffer.data[i+1];
 	}
 
-	serverVersion[VERSION_LENGTH] = '\0';
+	serverVersion[METADATA_VERSION_LENGTH] = '\0';
 }
 
 static void store_firmware_file(char *data, uint32_t length)
 {
-	printf("Metadata: ");
-	for(uint32_t i = 0; i < length; i++) {
-		//printf("%c", *(data+(i * sizeof(char))));
+	printf("Entering %s", __func__);
+	printf("Storing %d bytes in buffer", length);
+	fw_dataLen += length;
+
+	bool done = false;
+	uint32_t dataBegin = 0;
+	uint32_t dataEnd = length;
+
+	while(!done) {
+		for(int i = dataBegin; i < dataEnd; i++) {
+			firmware_buffer.data[firmware_buffer.end] = data[i];
+			firmware_buffer.end++;
+			if(firmware_buffer.end == MAX_FIRMWARE_BUFFER_LEN) {
+				// We filled our buffer, we should write it to flash and clear before continuing.
+				dd_flash_write_data(fw_addrToWriteTo, &firmware_buffer.data[0], firmware_buffer.end);
+
+				// Also calculate CRC while we have the data.
+				dsu_crc32_cal(&firmware_buffer.data[0], MAX_FIRMWARE_BUFFER_LEN, &fw_rollingCRC);
+
+				// Reset our trackers
+				firmware_buffer.begin = 0;
+				firmware_buffer.end = 0;
+			}
+		}
+		done = true;
 	}
-	printf("\r\n");
+}
+
+static void finalize_firmware_update() {
+	char metadata_crc_buffer[8];
+	snprintf(&metadata_crc_buffer[0], 8, "%s", metadata_buffer.data[9]);
+	uint32_t metadata_crc = atoi(&metadata_crc_buffer[0]);
+
+	if(metadata_crc == fw_rollingCRC) {
+		// CRC matched. Our download was all good.
+		struct application_metadata md;
+		md.crc = fw_rollingCRC;
+		md.data_len = fw_dataLen;
+		md.index = 1;
+		md.start_addr = 0x2000;
+		dd_flash_write_data(fw_addrToWriteTo, &md, sizeof(struct application_metadata));
+
+		// Set flag in boot status to alert we should update on next boot.
+		struct boot_status bs;
+		get_boot_status(&bs);
+		bs.install_flag = INSTALL_FLAG_TRUE;
+		bs.install_idx = 1;
+		set_boot_status(&bs);
+	}
+	else {
+		printf("Firmware download completed, but CRC was not correct!");
+	}
 }
 
 /**
