@@ -17,14 +17,7 @@ Application code
 #include "GyroscopeDriver.h"
 #include "HttpDownloader.h"
 #include "FlashStorage.h"
-
-void nvm_init(void)
-{
-	struct nvm_config config_nvm;
-	nvm_get_config_defaults(&config_nvm);
-	config_nvm.manual_page_write = false;
-	nvm_set_config(&config_nvm);
-}
+#include "SerialConsole.h"
 
 void dd_app_example_test(void) {
 	// Init Button
@@ -62,8 +55,8 @@ void dd_app_example_test(void) {
 	uint32_t read_crc_res = 0;
 	uint32_t write_crc_res = 0;
 	enum status_code crcstat;
-	crcstat = dsu_crc32_cal(&read_buffer[0], AT25DFX_BUFFER_SIZE, &read_crc_res);
-	crcstat = dsu_crc32_cal(&write_buffer[0], AT25DFX_BUFFER_SIZE, &write_crc_res);
+	crcstat = crc32_recalculate(&read_buffer[0], AT25DFX_BUFFER_SIZE, &read_crc_res);
+	crcstat = crc32_recalculate(&write_buffer[0], AT25DFX_BUFFER_SIZE, &write_crc_res);
 	printf("CRC32 Result of read: %x\r\n", read_crc_res);
 	printf("CRC32 Result of write: %x\r\n", write_crc_res);
 	
@@ -96,8 +89,8 @@ void dd_app_example_test(void) {
 	
 	read_crc_res = 0;
 	write_crc_res = 0;
-	crcstat = dsu_crc32_cal(&read_page_buffer[0], NVMCTRL_PAGE_SIZE, &read_crc_res);
-	crcstat = dsu_crc32_cal(&write_page_buffer[0], NVMCTRL_PAGE_SIZE, &write_crc_res);
+	crcstat = crc32_recalculate(&read_page_buffer[0], NVMCTRL_PAGE_SIZE, &read_crc_res);
+	crcstat = crc32_recalculate(&write_page_buffer[0], NVMCTRL_PAGE_SIZE, &write_crc_res);
 	printf("CRC32 Result of read: %x\r\n", read_crc_res);
 	printf("CRC32 Result of write: %x\r\n", write_crc_res);
 	
@@ -124,7 +117,6 @@ void initDroneDAD() {
 	// Storage
 	at25dfx_init();
 	nvm_init();
-	dsu_crc32_init();
 	
 	// Sensor/Actuator
 	lp3944_init();
@@ -157,18 +149,12 @@ int main(void) {
 
 	printf("=== DroneDAD ===");
 	
-	// Get the existing fimrware metadata
-	struct flash_header header;
-	dd_flash_read_data(FLASH_HEADER_ADDR, &header, sizeof(struct flash_header));
-	header.metadata_addr[0] = 0x100;
-	header.metadata_addr[1] = 0x200;
-	header.metadata_addr[2] = 0x300;
-	dd_flash_write_data(FLASH_HEADER_ADDR, &header, sizeof(struct flash_header));
-	struct flash_header check;
-	dd_flash_read_data(FLASH_HEADER_ADDR, &check, sizeof(struct flash_header));
-	
 	handleUpdateRequest();
+	
+	unsigned char test[0x1000];
+	dd_flash_read_data(0x2000, &test[0], 0x1000);
 
+	printf("main: done.\r\n");
 	while (1) {
 	} /* Loop forever. */
 

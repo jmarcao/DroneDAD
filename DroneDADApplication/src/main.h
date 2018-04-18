@@ -11,16 +11,16 @@ extern "C" {
 
 
 /** Wi-Fi AP Settings. */
-#define MAIN_WLAN_SSID                       "ForTheAlliance" //"AirPennNet-Device" /**< Destination SSID */
+#define MAIN_WLAN_SSID                       "AirPennNet-Device" /**< Destination SSID */
 #define MAIN_WLAN_AUTH                       M2M_WIFI_SEC_WPA_PSK /**< Security manner */
-#define MAIN_WLAN_PSK                        "measuretape25" //"penn1740wifi" /**< Password for Destination SSID */
+#define MAIN_WLAN_PSK                        "penn1740wifi" /**< Password for Destination SSID */
 
 /** IP address parsing. */
 #define IPV4_BYTE(val, index)                ((val >> (index * 8)) & 0xFF)
 
 /** Content URI for download. */
-#define URL_METADATA                   "https://www.seas.upenn.edu/~jmarcao/ddad.meta"
-#define URL_LATEST_FIRMWARE            "https://www.seas.upenn.edu/~jmarcao/ddad_fw.bin"
+#define URL_METADATA                   "https://www.seas.upenn.edu/~jmarcao/dd.meta"
+#define URL_LATEST_FIRMWARE            "https://www.seas.upenn.edu/~jmarcao/dd_fw.bin"
 
 // Buffer len for metadata
 #define METADATA_VERSION_LENGTH 6
