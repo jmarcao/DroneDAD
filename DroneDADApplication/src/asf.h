@@ -52,6 +52,9 @@
  * running the ASF driver selector tool. Any changes will be discarded.
  */
 
+// From module: ADC - Analog-to-Digital Converter (Polled APIs)
+#include <adc.h>
+
 // From module: CRC-32 calculation
 #include <crc32.h>
 

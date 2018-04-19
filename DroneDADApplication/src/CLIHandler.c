@@ -10,8 +10,8 @@
 #include <string.h>
 
 #include "CLIHandler.h"
-#include "Version.h"
 #include "adc_temp.h"
+#include "dd_mqtt.h"
 
 const char* CMD_HELP = "help";
 const char* CMD_VER_BL = "ver_bl";
@@ -28,6 +28,9 @@ const char* CMD_CLEAR_ACT = "clear_act";
 const char* CMD_ADC_GET = "adc_get";
 const char* CMD_MCU_TEMP = "mcu_temp";
 const char* CMD_I2C_SCAN = "i2c_scan";
+
+extern struct adc_module adc_inst;
+extern struct i2c_master_module i2c_master_instance;
 
 void init_cmd_list() {
 	cmd_list = (struct option_list) {
@@ -47,6 +50,54 @@ void init_cmd_list() {
 		{ CMD_MCU_TEMP, "", "Print the temperature reading of the on-board MCU temperature sensor." } ,
 		{ CMD_I2C_SCAN, "", "Print out list of addresses of I2C devices on bus." }}
 	};
+}
+
+// TODO: Put this in a cleaner place
+#define DATA_LENGTH 8
+static uint8_t wr_buffer[DATA_LENGTH] = {
+	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
+};
+
+#define READ_DATA_LENGTH 14
+static uint8_t rd_buffer[DATA_LENGTH];
+
+#define SLAVE_ADDRESS (0x52 >> 1)
+/// 0x52 0x53 0x29
+
+#define MPU_6050_SLAVE_ADDR (0x68)
+
+static struct i2c_master_packet wr_packet = {
+	.address          = SLAVE_ADDRESS,
+	.data_length      = DATA_LENGTH,
+	.data             = wr_buffer,
+	.ten_bit_address  = false,
+	.high_speed       = false,
+	.hs_master_code   = 0x00,
+};
+
+static struct i2c_master_packet rd_packet = {
+	.address          = SLAVE_ADDRESS,
+	.data_length      = READ_DATA_LENGTH,
+	.data             = rd_buffer,
+	.ten_bit_address  = false,
+	.high_speed       = false,
+	.hs_master_code   = 0x00,
+};
+
+static void disable_adc(void) {
+	adc_disable(&adc_inst);
+}
+
+static void configure_adc(void) {
+	struct adc_config config;
+	
+	adc_get_config_defaults(&config);
+	config.clock_source = GCLK_GENERATOR_1;
+	config.reference = ADC_REFERENCE_INTVCC1;
+	config.clock_prescaler = ADC_CTRLB_PRESCALER_DIV16;
+	config.resolution = ADC_RESOLUTION_12BIT;
+	adc_init(&adc_inst, ADC, &config);
+	adc_enable(&adc_inst);
 }
 
 // TODO: If arg1 or arg2 are non-digit, we need to throw an error.
@@ -214,11 +265,11 @@ void handle_help() {
 
 
 void handle_ver_bl() {
-	printf("Bootloader Version: %s\r\n", BL_VERSION_STRING);
+	printf("Bootloader Version: %s\r\n", "TODO"); // TODO
 }
 
 void handle_ver_app() {
-	printf("Application Version: %s\r\n", APP_VERSION_STRING);
+	printf("Application Version: %s\r\n", "TODO"); // TODO
 }
 
 void handle_gpio_set(char port, int pin_num) {
@@ -384,13 +435,19 @@ void handle_i2c_scan() {
 		  wr_buffer[0]          = 0x00;
 		  wr_packet.data        = wr_buffer;
 		  i2c_status = i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &wr_packet);
-		  printf("Addr is %d \r\n", slave_address);
 		  if( i2c_status == STATUS_OK ) {
 			  //i2c_status = i2c_master_read_packet_wait(&i2c_master_instance, &rd_packet);
 			 printf("The slave address is %.2x \r\n", slave_address);
 		  }
+		  if(i2c_status == STATUS_ERR_TIMEOUT) {
+			  printf("Timeout!");
+		  }
 		  i2c_master_send_stop(&i2c_master_instance);
 	 }
 	 int i = 0;
+	
+}
+
+void handle_user_mqtt() {
 	
 }

@@ -106,6 +106,7 @@ const lp3944_led_data LP3944_LED7 = {
 struct i2c_master_module i2c_master_instance;
 void i2c_init(void)
 {
+#ifdef BACKUP_I2C
 	/* Initialize config structure and software module */
 	struct i2c_master_config config_i2c_master;
 	i2c_master_get_config_defaults(&config_i2c_master);
@@ -117,6 +118,20 @@ void i2c_init(void)
 	/* Initialize and enable device with config */
 	while(i2c_master_init(&i2c_master_instance, SERCOM3, &config_i2c_master) != STATUS_OK);
 	i2c_master_enable(&i2c_master_instance);
+#else	
+	/* Initialize config structure and software module */
+	struct i2c_master_config config_i2c_master;
+	i2c_master_get_config_defaults(&config_i2c_master);
+	/* Change buffer timeout to something longer */
+	config_i2c_master.buffer_timeout    = 65535;
+	config_i2c_master.pinmux_pad0       = PINMUX_PA08C_SERCOM0_PAD0;
+	config_i2c_master.pinmux_pad1       = PINMUX_PA09C_SERCOM0_PAD1;
+	config_i2c_master.generator_source  = GCLK_GENERATOR_0;
+	/* Initialize and enable device with config */
+	while(i2c_master_init(&i2c_master_instance, SERCOM0, &config_i2c_master) != STATUS_OK);
+	i2c_master_enable(&i2c_master_instance);
+#endif
+
 }
 
 

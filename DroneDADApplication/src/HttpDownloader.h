@@ -18,9 +18,6 @@ static download_state dl_state = NOT_READY;
 /** UART module for debug. */
 static struct usart_module cdc_uart_module;
 
-/** Instance of Timer module. */
-struct sw_timer_module swt_module_inst;
-
 /** Instance of HTTP client module. */
 struct http_client_module http_client_module_inst;
 
@@ -48,6 +45,20 @@ static uint32_t fw_rollingCRC;
 static uint32_t fw_dataLen;
 static char serverVersion[METADATA_VERSION_LENGTH+1];
 static char metadata_crc_buffer[8 + 1];
+
+/** Instance of Timer module. */
+struct sw_timer_module http_swt_module_inst;
+
+/**
+* \brief Configure Timer module.
+*/
+void configure_timer(void)
+{
+	struct sw_timer_config swt_conf;
+	sw_timer_get_config_defaults(&swt_conf);
+	sw_timer_init(&http_swt_module_inst, &swt_conf);
+	sw_timer_enable(&http_swt_module_inst);
+}
 
 static void wifiState_init(void)
 {
@@ -468,18 +479,6 @@ static void wifi_cb(uint8_t u8MsgType, void *pvMsg)
 }
 
 /**
-	* \brief Configure Timer module.
-	*/
-static void configure_timer(void)
-{
-	struct sw_timer_config swt_conf;
-	sw_timer_get_config_defaults(&swt_conf);
-
-	sw_timer_init(&swt_module_inst, &swt_conf);
-	sw_timer_enable(&swt_module_inst);
-}
-
-/**
 	* \brief Configure HTTP client module.
 	*/
 static void configure_http_client(void)
@@ -490,7 +489,7 @@ static void configure_http_client(void)
 	http_client_get_config_defaults(&httpc_conf);
 
 	httpc_conf.recv_buffer_size = MAIN_BUFFER_MAX_SIZE;
-	httpc_conf.timer_inst = &swt_module_inst;
+	httpc_conf.timer_inst = &http_swt_module_inst;
 
 	ret = http_client_init(&http_client_module_inst, &httpc_conf);
 	if (ret < 0) {
@@ -511,7 +510,7 @@ uint32_t getServerFirmwareVersion() {
 		/* Handle pending events from network controller. */
 		m2m_wifi_handle_events(NULL);
 		/* Checks the timer timeout. */
-		sw_timer_task(&swt_module_inst);
+		sw_timer_task(&http_swt_module_inst);
 	}
 	clear_state(GET_REQUESTED);
 	clear_state(DOWNLOADING);
@@ -530,7 +529,7 @@ bool downloadFirmwareUpdate() {
 		/* Handle pending events from network controller. */
 		m2m_wifi_handle_events(NULL);
 		/* Checks the timer timeout. */
-		sw_timer_task(&swt_module_inst);
+		sw_timer_task(&http_swt_module_inst);
 	}
 	clear_state(GET_REQUESTED);
 	clear_state(DOWNLOADING);
@@ -568,7 +567,7 @@ void handleUpdateRequest() {
 		/* Handle pending events from network controller. */
 		m2m_wifi_handle_events(NULL);
 		/* Checks the timer timeout. */
-		sw_timer_task(&swt_module_inst);
+		sw_timer_task(&http_swt_module_inst);
 	}
 	
 	// Download the latest firmware metadata from the server.

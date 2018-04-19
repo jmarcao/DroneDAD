@@ -18,6 +18,9 @@ Application code
 #include "HttpDownloader.h"
 #include "FlashStorage.h"
 #include "SerialConsole.h"
+#include "dd_mqtt.h"
+#include "CLIHandler.h"
+#include "adc_temp.h"
 
 void dd_app_example_test(void) {
 	// Init Button
@@ -123,9 +126,12 @@ void initDroneDAD() {
 	lsm6ds3_init();
 	
 	// Wifi
-	wifiState_init();
-	configure_timer();
+	//wifiState_init();
+	//configure_timer();
 	nm_bsp_init();
+	
+	// MQTT
+	configure_mqtt();
 }
 
 int main(void) {
@@ -147,7 +153,21 @@ int main(void) {
 	tstrWifiInitParam param;
 	int8_t ret;
 
-	printf("=== DroneDAD ===");
+	printf("=== DroneDAD ===\r\n");
+	
+	/*
+	init_cmd_list(); // Creates the help struct.
+	char input[256];
+		
+	printf("=== DroneDAD CLI Interface ===\r\n");
+	while (1) {
+		printf("> ");
+		scanf("%[^\r\n]%*c", input);
+		handle_user_input(input);
+	}
+	*/
+	
+	dd_mqtt_loop();
 	
 	handleUpdateRequest();
 	

@@ -38,4 +38,6 @@ void handle_adc_get(char port, int pin_num);
 void handle_mcu_temp();
 void handle_i2c_scan();
 
+void handle_user_mqtt();
+
 #endif /* CLIHANDLER_H_ */

@@ -2,9 +2,17 @@
 # Automatically-generated file. Do not edit or delete the file
 ################################################################################
 
+src\adc_temp.c
+
 src\ASF\common2\components\memory\serial_flash\at25dfx\at25dfx.c
 
 src\ASF\common\services\crc32\crc32.c
+
+src\ASF\sam0\drivers\adc\adc_sam_d_r_h\adc.c
+
+src\CLIHandler.c
+
+src\dd_mqtt.c
 
 src\ASF\common2\services\delay\sam0\systick_counter.c
 
