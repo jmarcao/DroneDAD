@@ -21,6 +21,9 @@ Register  Name         Function
 0x9       Reg. 9       RW Nonw
 */
 
+#ifndef LED_DRIVER_H
+#define LED_DRIVER_H
+
 #include <asf.h>
 
 // Our I2C bus requires a delay after each write.
@@ -63,48 +66,48 @@ typedef struct {
 	uint8_t led_offset;
 } lp3944_led_data;
 
-const lp3944_led_data LP3944_LED0 = {
+static const lp3944_led_data LP3944_LED0 = {
 	.led_bank_reg = LED_BANK_1_REG,
 	.led_offset = LED_0_OFFSET
 };
 
-const lp3944_led_data LP3944_LED1 = {
+static const lp3944_led_data LP3944_LED1 = {
 	.led_bank_reg = LED_BANK_1_REG,
 	.led_offset = LED_1_OFFSET
 };
 
-const lp3944_led_data LP3944_LED2 = {
+static const lp3944_led_data LP3944_LED2 = {
 	.led_bank_reg = LED_BANK_1_REG,
 	.led_offset = LED_2_OFFSET
 };
 
-const lp3944_led_data LP3944_LED3 = {
+static const lp3944_led_data LP3944_LED3 = {
 	.led_bank_reg = LED_BANK_1_REG,
 	.led_offset = LED_3_OFFSET
 };
 
-const lp3944_led_data LP3944_LED4 = {
+static const lp3944_led_data LP3944_LED4 = {
 	.led_bank_reg = LED_BANK_2_REG,
 	.led_offset = LED_4_OFFSET
 };
 
-const lp3944_led_data LP3944_LED5 = {
+static const lp3944_led_data LP3944_LED5 = {
 	.led_bank_reg = LED_BANK_2_REG,
 	.led_offset = LED_5_OFFSET
 };
 
-const lp3944_led_data LP3944_LED6 = {
+static const lp3944_led_data LP3944_LED6 = {
 	.led_bank_reg = LED_BANK_2_REG,
 	.led_offset = LED_6_OFFSET
 };
 
-const lp3944_led_data LP3944_LED7 = {
+static const lp3944_led_data LP3944_LED7 = {
 	.led_bank_reg = LED_BANK_2_REG,
 	.led_offset = LED_7_OFFSET
 };
 
 struct i2c_master_module i2c_master_instance;
-void i2c_init(void)
+static void i2c_init(void)
 {
 #ifdef BACKUP_I2C
 	/* Initialize config structure and software module */
@@ -155,7 +158,7 @@ static struct i2c_master_packet lp3944_rd_packet = {
 	.hs_master_code   = 0x00,
 };
 
-void _lp3944_i2c_write(uint8_t addr, uint8_t value){
+static void _lp3944_i2c_write(uint8_t addr, uint8_t value){
 	enum status_code i2c_status;
 	lp3944_wr_packet.address = LP3944_SLAVE_ADDR;
 	lp3944_wr_packet.data_length = LP3944_WRITE_DATA_LENGTH;
@@ -171,7 +174,7 @@ void _lp3944_i2c_write(uint8_t addr, uint8_t value){
 	}
 }
 
-void _lp3944_i2c_read(uint8_t addr, uint8_t* value) {
+static void _lp3944_i2c_read(uint8_t addr, uint8_t* value) {
 	enum status_code i2c_status;
 	lp3944_wr_packet.address = LP3944_SLAVE_ADDR;
 	lp3944_wr_packet.data_length = LP3944_READ_DATA_LENGTH;
@@ -204,7 +207,7 @@ void _lp3944_i2c_read(uint8_t addr, uint8_t* value) {
 	(*value) = lp3944_rd_packet.data[0];
 }
 
-void set_led(lp3944_led_data led, uint8_t value) {
+static void lp3944_set_led(lp3944_led_data led, uint8_t value) {
 	uint8_t new_value = 0;
 	uint8_t previous_value = 0;
 	
@@ -220,7 +223,7 @@ void set_led(lp3944_led_data led, uint8_t value) {
 	_lp3944_i2c_write(led.led_bank_reg, new_value);
 }
 
-void _set_duty_cycle(uint8_t percentage, uint8_t pwm_reg) {
+static void _set_duty_cycle(uint8_t percentage, uint8_t pwm_reg) {
 	if(percentage > MAX_PERCENTAGE) {
 		// Not allowed.
 		return;
@@ -230,15 +233,15 @@ void _set_duty_cycle(uint8_t percentage, uint8_t pwm_reg) {
 	_lp3944_i2c_write(pwm_reg, reg_value);
 }
 
-void set_duty_cycle_0(uint8_t percentage) {
+static void lp3944_set_duty_cycle_0(uint8_t percentage) {
 	_set_duty_cycle(percentage, DUTY0_REG);
 }
 
-void set_duty_cycle_1(uint8_t percentage) {
+static void lp3944_set_duty_cycle_1(uint8_t percentage) {
 	_set_duty_cycle(percentage, DUTY1_REG);
 }
 
-void _set_dim_rate(uint16_t dim_period_ms, uint8_t dim_reg) {
+static void _set_dim_rate(uint16_t dim_period_ms, uint8_t dim_reg) {
 	if(dim_period_ms > MAX_DIM_PERIOD) {
 		// Not allowed
 		return;
@@ -250,23 +253,73 @@ void _set_dim_rate(uint16_t dim_period_ms, uint8_t dim_reg) {
 	_lp3944_i2c_write(dim_reg, reg_value);
 }
 
-void set_dim_period_0(uint16_t dim_period_ms) {
+static void lp3944_set_dim_period_0(uint16_t dim_period_ms) {
 	_set_dim_rate(dim_period_ms, DIM0_REG);
 }
 
-void set_dim_period_1(uint16_t dim_period_ms) {
+static void lp3944_set_dim_period_1(uint16_t dim_period_ms) {
 	_set_dim_rate(dim_period_ms, DIM1_REG);
 }
 
-void lp3944_reset() {
+static void lp3944_reset() {
 	port_pin_set_output_level(PIN_PB02, false);
 	port_pin_set_output_level(PIN_PB02, true);
 }
 
-void lp3944_init() {
+static void set_all_leds(uint8_t value) {
+		lp3944_set_led(LP3944_LED0, value);
+		lp3944_set_led(LP3944_LED1, value);
+		lp3944_set_led(LP3944_LED2, value);
+		lp3944_set_led(LP3944_LED3, value);
+		lp3944_set_led(LP3944_LED4, value);
+		lp3944_set_led(LP3944_LED5, value);
+		lp3944_set_led(LP3944_LED6, value);
+		lp3944_set_led(LP3944_LED7, value);
+}
+
+static void led_update_stall_warning(int16_t currentPitch, int16_t stallAngle) {
+	printf("Pitch=%d\r\nStallAngle=%d\r\n", currentPitch, stallAngle);
+	if(currentPitch > stallAngle) {
+		// Set critical warning
+		set_all_leds(LED_ON);
+		printf("ANGLE CRITICAL!!!\r\n");
+	}
+	else if (currentPitch > (stallAngle - 10)) {
+		// Set caution warning
+		set_all_leds(LED_DIM0);
+		printf("Angle Warning!\r\n");
+	}
+	else {
+		// Clear Warnings
+		set_all_leds(LED_DIM1);
+	}
+}
+
+static void lp3944_init() {
+	// Set Reset pin High
 	struct port_config config_port_pin;
 	port_get_config_defaults(&config_port_pin);
 	config_port_pin.direction = PORT_PIN_DIR_OUTPUT;
 	port_pin_set_config(PIN_PB02, &config_port_pin);
 	port_pin_set_output_level(PIN_PB02, true);
+	
+	// Set DIM0 (Warning) Values
+	lp3944_set_dim_period_0(100);
+	lp3944_set_duty_cycle_0(50);
+	
+	// Set DIM1 (Normal Operation) Values
+	lp3944_set_dim_period_1(1000);
+	lp3944_set_duty_cycle_1(10);
+	
+	// Set all LEDs off.
+	lp3944_set_led(LP3944_LED0, LED_OFF);
+	lp3944_set_led(LP3944_LED1, LED_OFF);
+	lp3944_set_led(LP3944_LED2, LED_OFF);
+	lp3944_set_led(LP3944_LED3, LED_OFF);
+	lp3944_set_led(LP3944_LED4, LED_OFF);
+	lp3944_set_led(LP3944_LED5, LED_OFF);
+	lp3944_set_led(LP3944_LED6, LED_OFF);
+	lp3944_set_led(LP3944_LED7, LED_OFF);
 }
+
+#endif

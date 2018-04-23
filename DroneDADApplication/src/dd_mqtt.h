@@ -8,6 +8,7 @@
 #include "socket/include/socket.h"
 #include "SerialConsole.h"
 #include "MPU9150Driver.h"
+#include "LEDDriver.h"
 
 /* Max size of UART buffer. */
 #define MAIN_CHAT_BUFFER_SIZE 64
@@ -20,10 +21,18 @@
 
 /* Chat MQTT topic. */
 #define MAIN_CHAT_TOPIC "dronedad/"
-#define SUBSCRIBE_TOPIC "server"
-#define PUBLISH_TOPIC "client"
+#define SUBSCRIBE_TOPIC "server/"
+#define PUBLISH_TOPIC "client/"
+#define SUBTOPIC_AX "ax"
+#define SUBTOPIC_AY "ay"
+#define SUBTOPIC_AZ "az"
+#define SUBTOPIC_PITCH "pitch"
+#define SUBTOPIC_ROLL "roll"
+#define SUBTOPIC_STALLANGLE "stallangle"
+#define SUBTOPIC_OTAFU "otafu"
 
 static bool mqtt_ready = false;
+static bool mqtt_exit = false; // Exit flag for MQTT loop.
 
 /*
  * A MQTT broker server which was connected.
@@ -70,15 +79,44 @@ static void mqtt_configure_timer(void)
 	sw_timer_enable(&mqtt_swt_module_inst);
 }
 
+static int16_t stallAngle = 60; // Default value.
+static float filtered_pitch = 0;
+static float filtered_roll = 0;
+static const float weight = 0.9;
 static struct mpu9150_output_data mpuData;
 static void handle_mpu_timeout() {
 	get_mpu9150_reading(&mpuData);
 	
-	unsigned char mpuBuffer[256] = { 0 };
-	sprintf(mpuBuffer, "ax=%d;ay=%d;az=%d;gx=%d;gy=%d;gz=%d",
-	mpuData.ax, mpuData.ay, mpuData.az, mpuData.gx, mpuData.gy, mpuData.gz);
+	float pitch_bottom_eq = (float)sqrt((mpuData.ay * mpuData.ay) + (mpuData.az * mpuData.az));
+	float pitch_top_eq = (float)mpuData.ax;
+	float pitch = atan(pitch_top_eq / pitch_bottom_eq);
+	filtered_pitch = (1-weight)*filtered_pitch + (weight)*pitch;
 	
-	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC, mpuBuffer, 256, 0, 0);
+	float roll_bottom_eq = (float)sqrt((mpuData.az * mpuData.az) + (mpuData.ax * mpuData.ax));
+	float roll_top_eq = (float)mpuData.ay;
+	float roll = atan(roll_top_eq / roll_bottom_eq);
+	filtered_roll = (1-weight)*filtered_roll + (weight)*roll;
+	
+	int16_t int_pitch = (int16_t)filtered_pitch;
+	int16_t int_roll = (int16_t)filtered_roll;
+	
+	int16_t int_pitch_deg = (int16_t)(filtered_pitch*((float)90/1.5708));
+	int16_t int_roll_deg = (int16_t)(filtered_roll*((float)90/1.5708));
+	
+	led_update_stall_warning(abs(int_pitch_deg), stallAngle);
+	
+	printf("Pitch: %d\r\nRoll: %d\r\n", int_pitch_deg, int_roll_deg);
+	char sendBuf[33] = { '\0' };
+	itoa(mpuData.ax, sendBuf, 10);
+	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AX, &sendBuf[0], sizeof(char)*33, 0, 0);
+	itoa(mpuData.ay, sendBuf, 10);
+	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AY, &sendBuf[0], sizeof(char)*33, 0, 0);
+	itoa(mpuData.az, sendBuf, 10);
+	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AZ, &sendBuf[0], sizeof(char)*33, 0, 0);
+	itoa(int_pitch_deg, sendBuf, 10);
+	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_PITCH, &sendBuf[0], sizeof(char)*33, 0, 0);
+	itoa(int_roll_deg, sendBuf, 10);
+	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_ROLL, &sendBuf[0], sizeof(char)*33, 0, 0);
 }
 
 struct sw_timer_module mpuPoll_swt_module_inst;
@@ -89,12 +127,9 @@ static void mpuPoll_configure_timer(void)
 	sw_timer_init(&mpuPoll_swt_module_inst, &swt_conf);
 	sw_timer_enable(&mpuPoll_swt_module_inst);
 	int id = sw_timer_register_callback(&mpuPoll_swt_module_inst, (sw_timer_callback_t)handle_mpu_timeout,
-	NULL, 100);
+	NULL, 500);
 	sw_timer_enable_callback(&mpuPoll_swt_module_inst, id, 0);
 }
-
-
-
 
 /************************************************************************/
 /* WIFI STUFF, FIGURE OUT A WAY TO COMBINE WITH THE REST OF THE WIFI                                                                     */
@@ -119,28 +154,6 @@ static void set_uart_callback() {
 
 /**
  * \brief Callback to get the Wi-Fi status update.
- *
- * \param[in] msg_type type of Wi-Fi notification. Possible types are:
- *  - [M2M_WIFI_RESP_CURRENT_RSSI](@ref M2M_WIFI_RESP_CURRENT_RSSI)
- *  - [M2M_WIFI_RESP_CON_STATE_CHANGED](@ref M2M_WIFI_RESP_CON_STATE_CHANGED)
- *  - [M2M_WIFI_RESP_CONNTION_STATE](@ref M2M_WIFI_RESP_CONNTION_STATE)
- *  - [M2M_WIFI_RESP_SCAN_DONE](@ref M2M_WIFI_RESP_SCAN_DONE)
- *  - [M2M_WIFI_RESP_SCAN_RESULT](@ref M2M_WIFI_RESP_SCAN_RESULT)
- *  - [M2M_WIFI_REQ_WPS](@ref M2M_WIFI_REQ_WPS)
- *  - [M2M_WIFI_RESP_IP_CONFIGURED](@ref M2M_WIFI_RESP_IP_CONFIGURED)
- *  - [M2M_WIFI_RESP_IP_CONFLICT](@ref M2M_WIFI_RESP_IP_CONFLICT)
- *  - [M2M_WIFI_RESP_P2P](@ref M2M_WIFI_RESP_P2P)
- *  - [M2M_WIFI_RESP_AP](@ref M2M_WIFI_RESP_AP)
- *  - [M2M_WIFI_RESP_CLIENT_INFO](@ref M2M_WIFI_RESP_CLIENT_INFO)
- * \param[in] pvMsg A pointer to a buffer containing the notification parameters
- * (if any). It should be casted to the correct data type corresponding to the
- * notification type. Existing types are:
- *  - tstrM2mWifiStateChanged
- *  - tstrM2MWPSInfo
- *  - tstrM2MP2pResp
- *  - tstrM2MAPResp
- *  - tstrM2mScanDone
- *  - tstrM2mWifiscanResult
  */
 static void wifi_callback(uint8 msg_type, void *msg_data)
 {
@@ -181,18 +194,6 @@ static void wifi_callback(uint8 msg_type, void *msg_data)
 
 /**
  * \brief Callback to get the Socket event.
- *
- * \param[in] Socket descriptor.
- * \param[in] msg_type type of Socket notification. Possible types are:
- *  - [SOCKET_MSG_CONNECT](@ref SOCKET_MSG_CONNECT)
- *  - [SOCKET_MSG_BIND](@ref SOCKET_MSG_BIND)
- *  - [SOCKET_MSG_LISTEN](@ref SOCKET_MSG_LISTEN)
- *  - [SOCKET_MSG_ACCEPT](@ref SOCKET_MSG_ACCEPT)
- *  - [SOCKET_MSG_RECV](@ref SOCKET_MSG_RECV)
- *  - [SOCKET_MSG_SEND](@ref SOCKET_MSG_SEND)
- *  - [SOCKET_MSG_SENDTO](@ref SOCKET_MSG_SENDTO)
- *  - [SOCKET_MSG_RECVFROM](@ref SOCKET_MSG_RECVFROM)
- * \param[in] msg_data A structure contains notification informations.
  */
 static void socket_event_handler(SOCKET sock, uint8_t msg_type, void *msg_data)
 {
@@ -245,7 +246,7 @@ static void mqtt_callback(struct mqtt_module *module_inst, int type, union mqtt_
 	case MQTT_CALLBACK_CONNECTED:
 		if (data->connected.result == MQTT_CONN_RESULT_ACCEPT) {
 			/* Subscribe chat topic. */
-			mqtt_subscribe(module_inst, MAIN_CHAT_TOPIC SUBSCRIBE_TOPIC, 0);
+			mqtt_subscribe(module_inst, MAIN_CHAT_TOPIC SUBSCRIBE_TOPIC "#", 0);
 			/* Enable USART receiving callback. */
 			usart_enable_callback(&cdc_uart_module, USART_CALLBACK_BUFFER_RECEIVED);
 			printf("Preparation of the chat has been completed.\r\n");
@@ -260,7 +261,36 @@ static void mqtt_callback(struct mqtt_module *module_inst, int type, union mqtt_
 	case MQTT_CALLBACK_RECV_PUBLISH:
 		/* You received publish message which you had subscribed. */
 		if (data->recv_publish.topic != NULL && data->recv_publish.msg != NULL) {
-			if (!strncmp(data->recv_publish.topic, MAIN_CHAT_TOPIC, strlen(MAIN_CHAT_TOPIC))) {
+			if(!strncmp(data->recv_publish.topic, MAIN_CHAT_TOPIC SUBSCRIBE_TOPIC SUBTOPIC_STALLANGLE, 
+					strlen(MAIN_CHAT_TOPIC SUBSCRIBE_TOPIC SUBTOPIC_STALLANGLE)))
+			{
+				int16_t incoming_angle = 0;
+				char incoming_angle_buf[16] = { '\0' };
+				for (int i = 0; i < data->recv_publish.msg_size; i++) {
+					incoming_angle_buf[i] = data->recv_publish.msg[i];
+				}
+				incoming_angle = atoi(incoming_angle_buf);
+				printf("Received Stall Angle Update: %d\r\n",  incoming_angle);
+				if((incoming_angle < 90) && (incoming_angle > 0)) {
+					stallAngle = incoming_angle;
+				}
+				else {
+					fprintf(stderr, "Invalid Stall Angle value!\r\n");
+				}
+			}
+			else if(!strncmp(data->recv_publish.topic, MAIN_CHAT_TOPIC SUBSCRIBE_TOPIC SUBTOPIC_OTAFU,
+					strlen(MAIN_CHAT_TOPIC SUBSCRIBE_TOPIC SUBTOPIC_OTAFU)))
+			{
+				printf("OTAFU Requested\r\n");
+				// Clean up WIFI as we will reconnect.
+				m2m_wifi_disconnect();
+				m2m_wifi_deinit(NULL);
+				socketDeinit();
+				// Hanlde request
+				handleUpdateRequest();
+				mqtt_exit = true;
+			}
+			else if (!strncmp(data->recv_publish.topic, MAIN_CHAT_TOPIC, strlen(MAIN_CHAT_TOPIC))) {
 				/* Print user name and message */
 				for (int i = strlen(MAIN_CHAT_TOPIC); i < data->recv_publish.topic_size; i++) {
 					printf("%c", data->recv_publish.topic[i]);
@@ -387,7 +417,7 @@ static void dd_mqtt_loop() {
 	m2m_wifi_connect((char *)MAIN_WLAN_SSID, sizeof(MAIN_WLAN_SSID),
 	MAIN_WLAN_AUTH, (char *)MAIN_WLAN_PSK, M2M_WIFI_CH_ALL);
 
-	while (1) {
+	while (!mqtt_exit) {
 		/* Handle pending events from network controller. */
 		m2m_wifi_handle_events(NULL);
 		/* Try to read user input from USART. */
@@ -401,11 +431,6 @@ static void dd_mqtt_loop() {
 		check_usart_buffer(topic);
 	}
 }
-
-
-
-
-
 
 
 #endif

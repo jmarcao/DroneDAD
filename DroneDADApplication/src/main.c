@@ -13,14 +13,15 @@ Application code
 #include "socket/include/socket.h"
 #include "iot/http/http_client.h"
 
+#include "HttpDownloader.h"
 #include "LEDDriver.h"
 #include "GyroscopeDriver.h"
-#include "HttpDownloader.h"
 #include "FlashStorage.h"
 #include "SerialConsole.h"
-#include "dd_mqtt.h"
 #include "CLIHandler.h"
+#include "dd_mqtt.h"
 #include "adc_temp.h"
+
 
 void dd_app_example_test(void) {
 	// Init Button
@@ -155,24 +156,8 @@ int main(void) {
 
 	printf("=== DroneDAD ===\r\n");
 	
-	/*
-	init_cmd_list(); // Creates the help struct.
-	char input[256];
-		
-	printf("=== DroneDAD CLI Interface ===\r\n");
-	while (1) {
-		printf("> ");
-		scanf("%[^\r\n]%*c", input);
-		handle_user_input(input);
-	}
-	*/
-	
+	// Enter the mqtt loop. Ideally we would add CLI via calllback here.
 	dd_mqtt_loop();
-	
-	handleUpdateRequest();
-	
-	unsigned char test[0x1000];
-	dd_flash_read_data(0x2000, &test[0], 0x1000);
 
 	printf("main: done.\r\n");
 	while (1) {

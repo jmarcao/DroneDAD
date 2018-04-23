@@ -501,7 +501,7 @@ static void configure_http_client(void)
 	http_client_register_callback(&http_client_module_inst, http_client_metadata_req_callback);
 }
 
-uint32_t getServerFirmwareVersion() {
+static uint32_t getServerFirmwareVersion() {
 	// Set the Firmware handler callback
 	http_client_register_callback(&http_client_module_inst, http_client_metadata_req_callback);
 	sendHttpReq_metadata();
@@ -520,7 +520,7 @@ uint32_t getServerFirmwareVersion() {
 	return versionNumber;
 }
 
-bool downloadFirmwareUpdate() {
+static bool downloadFirmwareUpdate() {
 	// Set the Firmware handler callback
 	http_client_register_callback(&http_client_module_inst, http_client_firmware_download_req_callback);
 	sendHttpReq_firmware();
@@ -536,7 +536,7 @@ bool downloadFirmwareUpdate() {
 	clear_state(COMPLETED);
 }
 
-void handleUpdateRequest() {
+static void handleUpdateRequest() {
 	tstrWifiInitParam param;
 	int8_t ret;
 		
@@ -582,7 +582,6 @@ void handleUpdateRequest() {
 	else {
 		printf("Latest Version already installed.");
 	}
-
 }
 
 

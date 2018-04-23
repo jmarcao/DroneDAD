@@ -47,6 +47,10 @@ struct mpu9150_output_data {
 	int16_t gz;
 };
 
+static float calc_pitch(struct mpu9150_output_data* data) {
+	
+}
+
 static void get_mpu9150_reading(struct mpu9150_output_data* data) {
 	enum status_code i2c_status;
 	
@@ -60,9 +64,9 @@ static void get_mpu9150_reading(struct mpu9150_output_data* data) {
 	if( i2c_status == STATUS_OK ) {
 		i2c_status = i2c_master_read_packet_wait(&i2c_master_instance, &mpu_rd_packet);
 	}
-		else {
-			printf("i2c failed (%d)\r\n", i2c_status);
-		}
+	else {
+		printf("i2c failed (%d)\r\n", i2c_status);
+	}
 	i2c_master_send_stop(&i2c_master_instance);
 		
 	mpu_rd_packet.data[0] = mpu_rd_packet.data[0] & (0 << 6);
@@ -75,6 +79,9 @@ static void get_mpu9150_reading(struct mpu9150_output_data* data) {
 	mpu_wr_packet.data        = mpu_wr_buffer;
 	mpu_rd_packet.address = MPU_9150_SLAVE_ADDR;
 	i2c_status = i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &mpu_wr_packet);
+	if(i2c_status != STATUS_OK) {
+		printf("i2c failed (%d)\r\n", i2c_status);
+	}
 	i2c_master_send_stop(&i2c_master_instance);
 		
 	// Read back the Power management Register
@@ -87,9 +94,9 @@ static void get_mpu9150_reading(struct mpu9150_output_data* data) {
 	if( i2c_status == STATUS_OK ) {
 		i2c_status = i2c_master_read_packet_wait(&i2c_master_instance, &mpu_rd_packet);
 	}
-		else {
-			printf("i2c failed (%d)\r\n", i2c_status);
-		}
+	else {
+		printf("i2c failed (%d)\r\n", i2c_status);
+	}
 	i2c_master_send_stop(&i2c_master_instance);
 		
 	// Get the data.
@@ -105,6 +112,7 @@ static void get_mpu9150_reading(struct mpu9150_output_data* data) {
 	else {
 		printf("i2c failed (%d)\r\n", i2c_status);
 	}
+	i2c_master_send_stop(&i2c_master_instance);
 		
 	int16_t ax, ay, az, gx, gy, gz;
 	data->ax = (((int16_t)mpu_rd_packet.data[0]) << 8) | mpu_rd_packet.data[1];
@@ -114,13 +122,10 @@ static void get_mpu9150_reading(struct mpu9150_output_data* data) {
 	data->gy = (((int16_t)mpu_rd_packet.data[10]) << 8) | mpu_rd_packet.data[11];
 	data->gz = (((int16_t)mpu_rd_packet.data[12]) << 8) | mpu_rd_packet.data[13];
 	
-	/*
+	
 	printf("===Reading===\r\n");
 	printf("Ax = %d\r\nAy = %d\r\nAz = %d\r\nGx = %d\r\nGy = %d\r\nGz = %d\r\n", 
 		data->ax, data->ay, data->az, data->gx, data->gy, data->gz);
-	*/
-		
-	i2c_master_send_stop(&i2c_master_instance);
 }
 
 

@@ -85,6 +85,8 @@ enum status_code get_boot_status(struct boot_status* bs) {
 enum status_code set_boot_status(struct boot_status* bs) {
 	enum status_code status;
 	status = dd_nvm_row_write(BOOT_STATUS_ROW, (uint8_t*)bs, sizeof (struct boot_status));
+	struct boot_status bss;
+	dd_nvm_row_read(BOOT_STATUS_ROW, (uint8_t*)&bss, sizeof (struct boot_status));
 	return status;
 }
 

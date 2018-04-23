@@ -11,7 +11,6 @@
 
 #include "CLIHandler.h"
 #include "adc_temp.h"
-#include "dd_mqtt.h"
 
 const char* CMD_HELP = "help";
 const char* CMD_VER_BL = "ver_bl";
@@ -445,9 +444,5 @@ void handle_i2c_scan() {
 		  i2c_master_send_stop(&i2c_master_instance);
 	 }
 	 int i = 0;
-	
-}
-
-void handle_user_mqtt() {
 	
 }
