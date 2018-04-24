@@ -1,6 +1,6 @@
 #include <asf.h>
 #include <at25dfx_hal.h>
-#include <crc32.h>
+//#include <crc32.h>
 #include <stdio.h>
 
 // NVM Information
@@ -12,9 +12,9 @@
 #define FLASH_HEADER_ADDR 0x0
 
 // NVM Locations
-#define APPLICATION_ROW 40 
-#define APP_START_ADDR (APPLICATION_ROW * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE) // 0x2800 for Row 40
-#define BOOT_STATUS_ROW (NVM_NUMBER_OF_ROWS - 1) // Store boot status in second to last row. (1023)
+#define APPLICATION_ROW 64
+#define APP_START_ADDR (APPLICATION_ROW * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE) // 0x=6400 for Row 64
+#define BOOT_STATUS_ROW (NVM_NUMBER_OF_ROWS - 10) // Store boot status in second to last row. (1023)
 #define APPLICATION_METADATA_ROW (NVM_NUMBER_OF_ROWS - 2) // Store metadata inn third to last row. (1022)
 
 // Install Flags
@@ -44,9 +44,11 @@ struct application_metadata {
 };
 
 struct flash_header {
-	uint32_t crc; // Maybe not necessary. Would be a CRC of address.
 	uint32_t metadata_addr[MAX_APPLICATION_COUNT];
 };
+
+/** UART module for debug. */
+static struct usart_module cdc_uart_module;
 
 // Serial Setup
 #define AT25DFX_BUFFER_SIZE  (512)
@@ -68,11 +70,20 @@ static void at25dfx_init(void)
 	at25dfx_spi_config.pinmux_pad2 = PINMUX_PA18C_SERCOM1_PAD2; // MOSI - AT25DFX_SPI_PINMUX_PAD2;
 	at25dfx_spi_config.pinmux_pad3 = PINMUX_PA19C_SERCOM1_PAD3; // SCK - AT25DFX_SPI_PINMUX_PAD3;
 	status = spi_init(&at25dfx_spi, SERCOM1 /*AT25DFX_SPI*/, &at25dfx_spi_config);
+	if(STATUS_OK != status) {
+		printf("Failed to intialize Flash memory chip.\r\n");
+	}
 	spi_enable(&at25dfx_spi);
 	
 	at25dfx_chip_config.type = AT25DFX_081A; // AT25DFX_MEM_TYPE;
 	at25dfx_chip_config.cs_pin = PIN_PA07; // AT25DFX_CS;
 	status = at25dfx_chip_init(&at25dfx_chip, &at25dfx_spi, &at25dfx_chip_config);
+	if(STATUS_OK != status) {
+		printf("Failed to intialize Flash memory chip.\r\n");
+	}
+	
+	at25dfx_chip_wake(&at25dfx_chip);
+	at25dfx_chip_sleep(&at25dfx_chip);
 }
 
 void watchdog_early_warning_callback(void)
@@ -123,6 +134,10 @@ void application_jump(void) {
 	// Set the function pointer.
 	application_code_entry = (void (*)(void))(unsigned*)(*(unsigned*)(APP_START_ADDR + 4));
 
+	// Last thing we do before jumping is disable the USART. Otherwise the App cannot regain control of it.
+	usart_disable(&cdc_uart_module);
+	spi_disable(&at25dfx_spi);
+	
 	application_code_entry();
 }
 
@@ -140,7 +155,7 @@ enum status_code dd_nvm_row_read(int row, uint8_t* data, int data_len) {
 enum status_code dd_nvm_row_write(int row, uint8_t* data, int data_len) {
 	enum status_code status;
 	int row_addr = row * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE;
-	
+	printf("Writing to NVM Row %d\r\n", row);
 	do {
 		status = nvm_erase_row(row_addr);	
 	} while(status == STATUS_BUSY);
@@ -199,6 +214,7 @@ enum status_code load_golden_image() {
 }
 
 void restart() {
+	printf("Restarting...");
 	while(1) {}; // TODO: Implement watchdog functionality to reboot.
 }
 
@@ -347,15 +363,26 @@ bool check_nvm_application_crc(uint32_t crc_to_check, uint32_t nvm_row, uint32_t
 }
 
 enum status_code write_application_to_nvm(uint32_t flash_addr, uint32_t data_len) {
-	enum status_code status;
+	enum status_code status = STATUS_OK;
 	const int CHUNK_LEN = NVMCTRL_ROW_SIZE;
 	uint8_t data[CHUNK_LEN];
 	
+	printf("data_len=%d\r\n", data_len);
 	for(unsigned int i = 0; i < data_len; i += CHUNK_LEN) {
 		status = dd_flash_read_data(flash_addr + i, &data[0], CHUNK_LEN);
-		status = dd_nvm_row_write(APPLICATION_ROW + i, &data[0], CHUNK_LEN);
+		if(status != STATUS_OK) {
+			printf("Failed Flash Read (%d)\r\n", status);
+			break;
+		}
+		status = dd_nvm_row_write(APPLICATION_ROW + (i / CHUNK_LEN), &data[0], CHUNK_LEN);
+		if(status != STATUS_OK) {
+			printf("Failed NVM Write (%d)\r\n", status);
+			printf("i=%d\r\n", i);
+			break;
+		}
 	}
 	
+	return status;
 }
 
 enum status_code do_fw_update(struct boot_status* bs) {
@@ -369,22 +396,27 @@ enum status_code do_fw_update(struct boot_status* bs) {
 	}
 			
 	// Check CRC on flash.
+	/* CRC Not Working.
 	bool flash_crc_valid = check_flash_application_crc(am.crc, am.start_addr, am.data_len);
 	if(flash_crc_valid == false) {
 		error_loop();
 	}
+	*/
 			
 	// Update.
 	status = write_application_to_nvm(am.start_addr, am.data_len);
 	if(STATUS_OK != status) {
+		printf("Failed writing application to NVM!\r\n");
 		return status;
 	}
 			
 	// Check CRC on nvm.
+	/* CRC Not Working
 	bool nvm_crc_valid = check_nvm_application_crc(am.crc, APPLICATION_ROW, am.data_len);
 	if(nvm_crc_valid == false) {
 		error_loop();
 	}
+	*/
 	
 	// Write the metadata to NVM
 	status = dd_nvm_row_write(APPLICATION_METADATA_ROW, &am, sizeof(struct application_metadata));
@@ -394,7 +426,7 @@ enum status_code do_fw_update(struct boot_status* bs) {
 			
 	// Update the status flag.
 	bs->install_flag = INSTALL_FLAG_FALSE;
-	status = set_boot_status(&bs);
+	status = set_boot_status(bs);
 	if(STATUS_OK != status) {
 		return status;
 	}
@@ -416,6 +448,57 @@ bool loaded_fw_valid() {
 	return ret;
 }
 
+/**
+ * \brief Configure UART console.
+ */
+#define EDBG_CDC_MODULE              SERCOM4
+#define EDBG_CDC_SERCOM_MUX_SETTING  USART_RX_3_TX_2_XCK_3
+#define EDBG_CDC_SERCOM_PINMUX_PAD0  PINMUX_UNUSED
+#define EDBG_CDC_SERCOM_PINMUX_PAD1  PINMUX_UNUSED
+#define EDBG_CDC_SERCOM_PINMUX_PAD2  PINMUX_PB10D_SERCOM4_PAD2
+#define EDBG_CDC_SERCOM_PINMUX_PAD3  PINMUX_PB11D_SERCOM4_PAD3
+static void uartConsole_init(void)
+{
+	struct usart_config usart_conf;
+
+	usart_get_config_defaults(&usart_conf);
+	usart_conf.mux_setting = EDBG_CDC_SERCOM_MUX_SETTING;
+	usart_conf.pinmux_pad0 = EDBG_CDC_SERCOM_PINMUX_PAD0;
+	usart_conf.pinmux_pad1 = EDBG_CDC_SERCOM_PINMUX_PAD1;
+	usart_conf.pinmux_pad2 = EDBG_CDC_SERCOM_PINMUX_PAD2;
+	usart_conf.pinmux_pad3 = EDBG_CDC_SERCOM_PINMUX_PAD3;
+	usart_conf.baudrate    = 115200;
+
+	stdio_serial_init(&cdc_uart_module, EDBG_CDC_MODULE, &usart_conf);
+	usart_enable(&cdc_uart_module);
+}
+
+void nvm_test() {
+	 uint8_t page_buffer[NVMCTRL_PAGE_SIZE];
+	 uint8_t read_buffer[NVMCTRL_PAGE_SIZE] = { '\0' };
+	 for (uint32_t i = 0; i < NVMCTRL_PAGE_SIZE; i++) {
+		 page_buffer[i] = i;
+	 }
+	 enum status_code error_code;
+	 do
+	 {
+		 error_code = nvm_erase_row(
+		 100 * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE);
+	 } while (error_code == STATUS_BUSY);
+	 do
+	 {
+		 error_code = nvm_write_buffer(
+		 100 * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE,
+		 page_buffer, NVMCTRL_PAGE_SIZE);
+	 } while (error_code == STATUS_BUSY);
+	 do
+	 {
+		 error_code = nvm_read_buffer(
+		 100 * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE,
+		 read_buffer, NVMCTRL_PAGE_SIZE);
+	 } while (error_code == STATUS_BUSY);
+}
+
 int main (void) {	
 	enum status_code status;
 	
@@ -423,7 +506,7 @@ int main (void) {
 	system_init();
 	nvm_init();
 	at25dfx_init();
-	dsu_crc32_init();
+	//dsu_crc32_init();
 	// Enable watchdogs, kick by calling wdt_reset_count() -- Only when ready!
 	//configure_wdt();
 	//configure_wdt_callbacks();
@@ -432,13 +515,20 @@ int main (void) {
 	// Get our boot status
 	struct boot_status bs;
 	get_boot_status(&bs);
+	uartConsole_init();
 	
+	printf("\r\n\r\n====DRONEDAD Bootloader====\r\n");
+	printf("Compiled %s %s\r\n", __TIME__, __DATE__);
+	
+	//application_jump();
+	
+	printf("Checking Boot Status...\r\n");
 	if(check_signature(bs.signature) == false) {
-		printf("Invalid boot signature. Boot Status cannot be trusted.");
-		printf("Attempting CRC check on FW.");
+		printf("Invalid boot signature. Boot Status cannot be trusted.\r\n");
+		printf("Attempting CRC check on FW.\r\n");
 		if(loaded_fw_valid() == true) {
 			// Our FW  is valid, we have corrupted the boot flag. Reset the flag and reboot.
-			printf("FW valid. Reseting Boot signature and restarting...");
+			printf("FW valid. Reseting Boot signature and restarting...\r\n");
 			get_boot_status_default(&bs);
 			set_boot_status(&bs);
 			restart();
@@ -446,19 +536,25 @@ int main (void) {
 		else {
 			// Our boot status was invalid and the CRC did not match.
 			// We should load the golden image from flash to NVM.
-			printf("FW invalid. Attempting to load Golden Image");
+			printf("FW invalid. Attempting to load Golden Image\r\n");
 			load_golden_image();
 			restart();
 		}
 	}
+	else {
+		printf("Boot Signature Valid.\r\n");
+	}
 	
 	if(bs.install_flag == INSTALL_FLAG_TRUE) {
-		printf("We need to install!");
+		printf("Update Scheduled. Now Updating...\r\n");
 		
 		status = do_fw_update(&bs);
 		if(STATUS_OK != status) {
 			printf("Failed FW update!");
 			error_loop();
+		}
+		else {
+			printf("Firmware Update Successful.\r\n");
 		}
 		
 		// All good, reboot.
@@ -466,6 +562,7 @@ int main (void) {
 	}
 	
 	// Application time!
+	printf("Jumping to application\r\n");
 	application_jump();
 	
 	// Should not get here.

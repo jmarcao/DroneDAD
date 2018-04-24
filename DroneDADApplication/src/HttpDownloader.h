@@ -9,6 +9,8 @@
 #ifndef HTTPDOWNLOADER_H_
 #define HTTPDOWNLOADER_H_
 
+#include "errno.h"
+
 #include "FlashStorage.h"
 #include "NVMStorage.h"
 
@@ -218,16 +220,23 @@ static void finalize_firmware_update() {
 		struct application_metadata md;
 		md.crc = fw_rollingCRC;
 		md.data_len = fw_dataLen;
-		md.index = 1;
+		md.index = 0;
 		md.start_addr = fw_writeStart;
 		dd_flash_write_data(fw_metadataAddr, &md, sizeof(struct application_metadata));
+		
+		struct flash_header fh;
+		fh.metadata_addr[0] = fw_metadataAddr;
+		dd_flash_write_data(0x0, &fh, sizeof(struct flash_header));
 
 		// Set flag in boot status to alert we should update on next boot.
 		struct boot_status bs;
 		get_boot_status(&bs);
 		bs.install_flag = INSTALL_FLAG_TRUE;
-		bs.install_idx = 1;
+		bs.install_idx = 0;
 		set_boot_status(&bs);
+		
+		struct boot_status bss;
+		get_boot_status(&bss);
 		
 		printf("Wrote FW Image to flash. Will update on next boot.\r\n");
 	}
@@ -285,8 +294,9 @@ static void http_client_metadata_req_callback(struct http_client_module *module_
 		/* If disconnect reason is equal to -ECONNRESET(-104),
 			* It means the server has closed the connection (timeout).
 			* This is normal operation.
+			* Sometimes we lose network too, just try again. Our wifi module is not very strong.
 			*/
-		if (data->disconnected.reason == -EAGAIN) {
+		if ((data->disconnected.reason == -EAGAIN) || (data->disconnected.reason == -ETIME)) {
 			/* Server has not responded. Retry immediately. */
 			if (is_state_set(DOWNLOADING)) {
 				//f_close(&file_object);

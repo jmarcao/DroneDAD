@@ -30,9 +30,15 @@
 #define SUBTOPIC_ROLL "roll"
 #define SUBTOPIC_STALLANGLE "stallangle"
 #define SUBTOPIC_OTAFU "otafu"
+#define SUBTOPIC_STALLALERT "stallalert"
+
+#define STALLALERT_CRITICAL 2
+#define STALLALERT_WARN     1
+#define STALLALERT_OK       0
 
 static bool mqtt_ready = false;
 static bool mqtt_exit = false; // Exit flag for MQTT loop.
+static bool mpu_present = false;
 
 /*
  * A MQTT broker server which was connected.
@@ -84,6 +90,7 @@ static float filtered_pitch = 0;
 static float filtered_roll = 0;
 static const float weight = 0.9;
 static struct mpu9150_output_data mpuData;
+static int previousStallAlertValue = 0;
 static void handle_mpu_timeout() {
 	get_mpu9150_reading(&mpuData);
 	
@@ -103,9 +110,37 @@ static void handle_mpu_timeout() {
 	int16_t int_pitch_deg = (int16_t)(filtered_pitch*((float)90/1.5708));
 	int16_t int_roll_deg = (int16_t)(filtered_roll*((float)90/1.5708));
 	
-	led_update_stall_warning(abs(int_pitch_deg), stallAngle);
+	char stallAngleBuf[33] = { '\0' };
+	if(abs(int_pitch_deg) > stallAngle) {
+		set_all_leds(ANGLE_CRITICAL);
+		itoa(STALLALERT_CRITICAL, stallAngleBuf, 10);
+		if(previousStallAlertValue != STALLALERT_CRITICAL) {
+			mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_STALLALERT, &stallAngleBuf[0], 
+				sizeof(char)*33, 0, 0);
+			previousStallAlertValue = STALLALERT_CRITICAL;
+		}
+	}
+	else if(abs(int_pitch_deg) > (stallAngle - 15)) {
+		set_all_leds(ANGLE_WARN);
+		itoa(STALLALERT_WARN, stallAngleBuf, 10);
+		if(previousStallAlertValue != STALLALERT_WARN) {
+			mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_STALLALERT, &stallAngleBuf[0],
+				sizeof(char)*33, 0, 0);
+			previousStallAlertValue = STALLALERT_WARN;
+		}
+	}
+	else {
+		set_all_leds(ANGLE_OK);
+		itoa(STALLALERT_OK, stallAngleBuf, 10);
+		if(previousStallAlertValue != STALLALERT_OK) {
+			mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_STALLALERT, &stallAngleBuf[0],
+				sizeof(char)*33, 0, 0);
+			previousStallAlertValue = STALLALERT_OK;
+		}
+	}
 	
-	printf("Pitch: %d\r\nRoll: %d\r\n", int_pitch_deg, int_roll_deg);
+	printf("Stall Angle %d\r\n", stallAngle);
+	printf("Pitch: %d\r\nRoll: %d\r\n", abs(int_pitch_deg), abs(int_roll_deg));
 	char sendBuf[33] = { '\0' };
 	itoa(mpuData.ax, sendBuf, 10);
 	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AX, &sendBuf[0], sizeof(char)*33, 0, 0);
@@ -286,9 +321,31 @@ static void mqtt_callback(struct mqtt_module *module_inst, int type, union mqtt_
 				m2m_wifi_disconnect();
 				m2m_wifi_deinit(NULL);
 				socketDeinit();
-				// Hanlde request
+				// Handle Update
 				handleUpdateRequest();
 				mqtt_exit = true;
+			}
+			else if(!strncmp(data->recv_publish.topic, MAIN_CHAT_TOPIC SUBSCRIBE_TOPIC SUBTOPIC_STALLALERT,
+			strlen(MAIN_CHAT_TOPIC SUBSCRIBE_TOPIC SUBTOPIC_STALLALERT)))
+			{
+				printf("Stall Alert Received\r\n");
+				// Get the value
+				char alert_buf[16] = { '\0' };
+				for (int i = 0; i < data->recv_publish.msg_size; i++) {
+					alert_buf[i] = data->recv_publish.msg[i];
+				}
+				int alert_value = atoi(&alert_buf[0]);
+				
+				printf("Angle Alert is %d\r\n", alert_value);
+				if(alert_value == 0) {
+					set_all_leds(ANGLE_OK);
+				}
+				else if(alert_value == 1) {
+					set_all_leds(ANGLE_WARN);
+				}
+				else if(alert_value == 2) {
+					set_all_leds(ANGLE_CRITICAL);
+				}
 			}
 			else if (!strncmp(data->recv_publish.topic, MAIN_CHAT_TOPIC, strlen(MAIN_CHAT_TOPIC))) {
 				/* Print user name and message */
@@ -391,10 +448,14 @@ static void dd_mqtt_loop() {
 	char topic[strlen(MAIN_CHAT_TOPIC) + MAIN_CHAT_USER_NAME_SIZE + 1];
 	
 	set_uart_callback();
-	mpuPoll_configure_timer();
+	bool mpu_present = detect_mpu9150();
+	if(mpu_present) {
+		mpuPoll_configure_timer();
+	}
 	
 	/* Setup user name first */
-	mqtt_user[0] = 'c';
+	mqtt_user[0] = 'B';
+	printf("Username is %d\r\n", mqtt_user[0]);
 	sprintf(topic, "%s%s", MAIN_CHAT_TOPIC, PUBLISH_TOPIC);
 
 	/* Initialize Wi-Fi parameters structure. */
@@ -416,7 +477,7 @@ static void dd_mqtt_loop() {
 	/* Connect to router. */
 	m2m_wifi_connect((char *)MAIN_WLAN_SSID, sizeof(MAIN_WLAN_SSID),
 	MAIN_WLAN_AUTH, (char *)MAIN_WLAN_PSK, M2M_WIFI_CH_ALL);
-
+	
 	while (!mqtt_exit) {
 		/* Handle pending events from network controller. */
 		m2m_wifi_handle_events(NULL);
@@ -424,7 +485,7 @@ static void dd_mqtt_loop() {
 		usart_read_job(&cdc_uart_module, &uart_ch_buffer);
 		/* Checks the timer timeout. */
 		sw_timer_task(&mqtt_swt_module_inst);
-		if(mqtt_ready) {
+		if(mqtt_ready && mpu_present) {
 			sw_timer_task(&mpuPoll_swt_module_inst);
 		}
 		/* Checks the USART buffer. */

@@ -217,6 +217,12 @@ int main(void)
 	/* Initialize the UART console. */
 	configure_console();
 	printf(STRING_HEADER);
+	
+	printf("Hello world! You updated!!!");
+	int i = 0;
+	while(1){
+		i++;
+	}
 
 	/* Initialize the BSP. */
 	nm_bsp_init();

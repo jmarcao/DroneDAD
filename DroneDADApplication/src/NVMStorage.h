@@ -28,7 +28,7 @@
 #define DRONEDAD_MAJOR_VERSION 0x00 // Just to make us feel more like a legit product
 #define DRONEDAD_MINOR_VERSION 0x00
 #define DRONEDAD_REVISION 0x01 // Revision can be used just to debug, forcing a bad signature.
-const uint8_t DRONEDAD_BOOT_SIGNATURE[] = {0xDD, 0xAD, 0x20, 0x18, \
+const uint8_t DRONEDAD_BOOT_SIGNATURE[DRONEDAD_BOOT_SIGNATURE_LENGTH] = {0xDD, 0xAD, 0x20, 0x18, \
 0x00, DRONEDAD_MAJOR_VERSION, DRONEDAD_MINOR_VERSION, DRONEDAD_REVISION}; // DD AD 20 18 0x00 <MajorVersion> <MinorVersion> <Revesion>
 
 struct boot_status {
@@ -84,6 +84,10 @@ enum status_code get_boot_status(struct boot_status* bs) {
 
 enum status_code set_boot_status(struct boot_status* bs) {
 	enum status_code status;
+	// Set the signature
+	for(int i = 0; i < DRONEDAD_BOOT_SIGNATURE_LENGTH; i++) {
+		bs->signature[i] = DRONEDAD_BOOT_SIGNATURE[i];
+	}
 	status = dd_nvm_row_write(BOOT_STATUS_ROW, (uint8_t*)bs, sizeof (struct boot_status));
 	struct boot_status bss;
 	dd_nvm_row_read(BOOT_STATUS_ROW, (uint8_t*)&bss, sizeof (struct boot_status));

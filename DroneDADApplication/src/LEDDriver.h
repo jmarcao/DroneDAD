@@ -34,6 +34,10 @@ Register  Name         Function
 #define LED_DIM0 0x2
 #define LED_DIM1 0x3
 
+#define ANGLE_OK LED_DIM1
+#define ANGLE_WARN LED_DIM0
+#define ANGLE_CRITICAL LED_ON
+
 #define LED_BANK_1_REG 0x6
 #define LED_BANK_2_REG 0x7
 
@@ -109,19 +113,6 @@ static const lp3944_led_data LP3944_LED7 = {
 struct i2c_master_module i2c_master_instance;
 static void i2c_init(void)
 {
-#ifdef BACKUP_I2C
-	/* Initialize config structure and software module */
-	struct i2c_master_config config_i2c_master;
-	i2c_master_get_config_defaults(&config_i2c_master);
-	/* Change buffer timeout to something longer */
-	config_i2c_master.buffer_timeout    = 65535;
-	config_i2c_master.pinmux_pad0       = PINMUX_PA22C_SERCOM3_PAD0;
-	config_i2c_master.pinmux_pad1       = PINMUX_PA23C_SERCOM3_PAD1;
-	config_i2c_master.generator_source  = GCLK_GENERATOR_0;
-	/* Initialize and enable device with config */
-	while(i2c_master_init(&i2c_master_instance, SERCOM3, &config_i2c_master) != STATUS_OK);
-	i2c_master_enable(&i2c_master_instance);
-#else	
 	/* Initialize config structure and software module */
 	struct i2c_master_config config_i2c_master;
 	i2c_master_get_config_defaults(&config_i2c_master);
@@ -133,8 +124,6 @@ static void i2c_init(void)
 	/* Initialize and enable device with config */
 	while(i2c_master_init(&i2c_master_instance, SERCOM0, &config_i2c_master) != STATUS_OK);
 	i2c_master_enable(&i2c_master_instance);
-#endif
-
 }
 
 
@@ -165,12 +154,11 @@ static void _lp3944_i2c_write(uint8_t addr, uint8_t value){
 	lp3944_wr_buffer[LP3944_REG_ADDR_FIELD] = addr;
 	lp3944_wr_buffer[LP3944_DATA_FIELD] = value;
 	lp3944_wr_packet.data = lp3944_wr_buffer;
-	//delay_us(DELAY_VALUE_US);
-	i2c_status = i2c_master_write_packet_wait(&i2c_master_instance, &lp3944_wr_packet);
 	delay_us(DELAY_VALUE_US);
+	i2c_status = i2c_master_write_packet_wait(&i2c_master_instance, &lp3944_wr_packet);
 	if(i2c_status != STATUS_OK) {
 		// Uhoh
-		printf("Failure in %s when writing to i2c (%d)", __func__, i2c_status);
+		printf("Failure in %s when writing to i2c (%d)\r\n", __func__, i2c_status);
 	}
 }
 
@@ -180,9 +168,8 @@ static void _lp3944_i2c_read(uint8_t addr, uint8_t* value) {
 	lp3944_wr_packet.data_length = LP3944_READ_DATA_LENGTH;
 	lp3944_wr_buffer[LP3944_REG_ADDR_FIELD] = addr;
 	lp3944_wr_packet.data = lp3944_wr_buffer;
-	//delay_us(DELAY_VALUE_US);
-	i2c_status = i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &lp3944_wr_packet);
 	delay_us(DELAY_VALUE_US);
+	i2c_status = i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &lp3944_wr_packet);
 	if(i2c_status != STATUS_OK) {
 		//uhoh
 		int i = 0;
@@ -190,19 +177,17 @@ static void _lp3944_i2c_read(uint8_t addr, uint8_t* value) {
 	else {
 		lp3944_rd_packet.address = LP3944_SLAVE_ADDR;
 		lp3944_rd_packet.data_length = LP3944_READ_DATA_LENGTH;
-		//delay_us(DELAY_VALUE_US);
-		i2c_status = i2c_master_read_packet_wait_no_stop(&i2c_master_instance, &lp3944_rd_packet);
 		delay_us(DELAY_VALUE_US);
+		i2c_status = i2c_master_read_packet_wait_no_stop(&i2c_master_instance, &lp3944_rd_packet);
 		if(i2c_status != STATUS_OK) {
 			// Uhoh
 			int i = 0;
 		}
 		int i = 0;
 	}
-
-	i2c_master_send_stop(&i2c_master_instance);
 	
-	delay_us(1);
+	delay_us(DELAY_VALUE_US);
+	i2c_master_send_stop(&i2c_master_instance);
 	
 	(*value) = lp3944_rd_packet.data[0];
 }
@@ -221,6 +206,19 @@ static void lp3944_set_led(lp3944_led_data led, uint8_t value) {
 	
 	// Write the updated configuration.
 	_lp3944_i2c_write(led.led_bank_reg, new_value);
+}
+
+static void lp3944_set_led_bank(uint8_t bank, uint8_t value) {
+	uint8_t new_value = 0;
+
+	// Store new value for LED
+	new_value = (value << 0x0) | new_value;
+	new_value = (value << 0x2) | new_value;
+	new_value = (value << 0x4) | new_value;
+	new_value = (value << 0x6) | new_value;
+	
+	// Write the updated configuration.
+	_lp3944_i2c_write(bank, new_value);
 }
 
 static void _set_duty_cycle(uint8_t percentage, uint8_t pwm_reg) {
@@ -267,32 +265,8 @@ static void lp3944_reset() {
 }
 
 static void set_all_leds(uint8_t value) {
-		lp3944_set_led(LP3944_LED0, value);
-		lp3944_set_led(LP3944_LED1, value);
-		lp3944_set_led(LP3944_LED2, value);
-		lp3944_set_led(LP3944_LED3, value);
-		lp3944_set_led(LP3944_LED4, value);
-		lp3944_set_led(LP3944_LED5, value);
-		lp3944_set_led(LP3944_LED6, value);
-		lp3944_set_led(LP3944_LED7, value);
-}
-
-static void led_update_stall_warning(int16_t currentPitch, int16_t stallAngle) {
-	printf("Pitch=%d\r\nStallAngle=%d\r\n", currentPitch, stallAngle);
-	if(currentPitch > stallAngle) {
-		// Set critical warning
-		set_all_leds(LED_ON);
-		printf("ANGLE CRITICAL!!!\r\n");
-	}
-	else if (currentPitch > (stallAngle - 10)) {
-		// Set caution warning
-		set_all_leds(LED_DIM0);
-		printf("Angle Warning!\r\n");
-	}
-	else {
-		// Clear Warnings
-		set_all_leds(LED_DIM1);
-	}
+	lp3944_set_led_bank(LED_BANK_1_REG, value);
+	lp3944_set_led_bank(LED_BANK_2_REG, value);
 }
 
 static void lp3944_init() {
