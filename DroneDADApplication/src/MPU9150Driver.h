@@ -51,27 +51,6 @@ static float calc_pitch(struct mpu9150_output_data* data) {
 	
 }
 
-static bool detect_mpu9150() {
-	bool ret = false;
-	// Wake up the device
-	mpu_wr_packet.address     = MPU_9150_SLAVE_ADDR;
-	mpu_wr_packet.data_length = 1;
-	mpu_wr_buffer[0]          = 0x00;
-	mpu_wr_packet.data        = mpu_wr_buffer;
-	mpu_rd_packet.address = MPU_9150_SLAVE_ADDR;
-	enum status_code i2c_status = i2c_master_write_packet_wait(&i2c_master_instance, &mpu_wr_packet);
-	if(i2c_status == STATUS_OK) {
-		printf("MPU Present!\r\n");
-		ret = true;
-	}
-	else {
-		printf("MPU NOT Present.\r\n");
-	}
-	i2c_master_send_stop(&i2c_master_instance);
-	
-	return ret;
-}
-
 static void get_mpu9150_reading(struct mpu9150_output_data* data) {
 	enum status_code i2c_status;
 	
@@ -83,7 +62,7 @@ static void get_mpu9150_reading(struct mpu9150_output_data* data) {
 	mpu_rd_packet.address = MPU_9150_SLAVE_ADDR;
 	i2c_status = i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &mpu_wr_packet);
 	if( i2c_status == STATUS_OK ) {
-		i2c_status = i2c_master_read_packet_wait(&i2c_master_instance, &mpu_rd_packet);
+		i2c_status = i2c_master_read_packet_wait_no_stop(&i2c_master_instance, &mpu_rd_packet);
 	}
 	else {
 		printf("i2c failed (%d)\r\n", i2c_status);
@@ -113,7 +92,7 @@ static void get_mpu9150_reading(struct mpu9150_output_data* data) {
 	mpu_rd_packet.address = MPU_9150_SLAVE_ADDR;
 	i2c_status = i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &mpu_wr_packet);
 	if( i2c_status == STATUS_OK ) {
-		i2c_status = i2c_master_read_packet_wait(&i2c_master_instance, &mpu_rd_packet);
+		i2c_status = i2c_master_read_packet_wait_no_stop(&i2c_master_instance, &mpu_rd_packet);
 	}
 	else {
 		printf("i2c failed (%d)\r\n", i2c_status);
@@ -128,7 +107,7 @@ static void get_mpu9150_reading(struct mpu9150_output_data* data) {
 	mpu_rd_packet.address = MPU_9150_SLAVE_ADDR;
 	i2c_status = i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &mpu_wr_packet);
 	if( i2c_status == STATUS_OK ) {
-		i2c_status = i2c_master_read_packet_wait(&i2c_master_instance, &mpu_rd_packet);
+		i2c_status = i2c_master_read_packet_wait_no_stop(&i2c_master_instance, &mpu_rd_packet);
 	}
 	else {
 		printf("i2c failed (%d)\r\n", i2c_status);
@@ -149,6 +128,25 @@ static void get_mpu9150_reading(struct mpu9150_output_data* data) {
 		data->ax, data->ay, data->az, data->gx, data->gy, data->gz);
 }
 
+static bool detect_mpu9150() {
+	bool ret = false;
+	// Wake up the device
+	mpu_wr_packet.address     = MPU_9150_SLAVE_ADDR;
+	mpu_wr_packet.data_length = 1;
+	mpu_wr_buffer[0]          = 0x00;
+	mpu_wr_packet.data        = mpu_wr_buffer;
+	mpu_rd_packet.address = MPU_9150_SLAVE_ADDR;
+	enum status_code i2c_status = i2c_master_write_packet_wait(&i2c_master_instance, &mpu_wr_packet);
+	if(i2c_status == STATUS_OK) {
+		printf("MPU Present!\r\n");
+		ret = true;
+	}
+	else {
+		printf("MPU NOT Present.\r\n");
+	}
+	
+	return ret;
+}
 
 
 

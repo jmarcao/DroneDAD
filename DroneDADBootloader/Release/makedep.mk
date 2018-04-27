@@ -4,11 +4,11 @@
 
 src\ASF\common2\components\memory\serial_flash\at25dfx\at25dfx.c
 
-src\ASF\sam0\drivers\dsu\crc32\crc32.c
+src\ASF\common2\services\delay\sam0\cycle_counter.c
+
+src\ASF\common\services\crc32\crc32.c
 
 src\ASF\sam0\drivers\nvm\nvm.c
-
-src\ASF\sam0\drivers\pac\pac_sam_d_r_h\pac.c
 
 src\ASF\sam0\drivers\port\port.c
 

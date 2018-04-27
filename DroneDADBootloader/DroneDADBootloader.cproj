@@ -32,13 +32,14 @@
       <framework-data>
         <options>
           <option id="common.boards" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="common.services.crc32" value="Add" config="" content-id="Atmel.ASF" />
           <option id="common2.components.memory.serial_flash.at25dfx" value="Add" config="polled_spi" content-id="Atmel.ASF" />
-          <option id="sam0.drivers.dsu_crc32" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.drivers.nvm" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.drivers.port" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.drivers.system" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.drivers.wdt" value="Add" config="callback" content-id="Atmel.ASF" />
           <option id="sam0.utils.stdio.stdio_serial" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="common2.services.delay" value="Add" config="cycle" content-id="Atmel.ASF" />
           <option id="sam0.utils.linker_scripts" value="Add" config="" content-id="Atmel.ASF" />
         </options>
         <configurations>
@@ -232,10 +233,6 @@
           <file path="src/ASF/sam0/drivers/sercom/spi/quick_start_slave/qs_spi_slave_basic.h" framework="" version="3.35.1" source="sam0\drivers\sercom\spi\quick_start_slave\qs_spi_slave_basic.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/sam0/drivers/sercom/spi/quick_start_slave_callback/qs_spi_slave_callback.h" framework="" version="3.35.1" source="sam0\drivers\sercom\spi\quick_start_slave_callback\qs_spi_slave_callback.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/sam0/drivers/sercom/spi/quick_start_master/qs_spi_master_basic.h" framework="" version="3.35.1" source="sam0\drivers\sercom\spi\quick_start_master\qs_spi_master_basic.h" changed="False" content-id="Atmel.ASF" />
-          <file path="src/ASF/sam0/drivers/dsu/crc32/crc32.c" framework="" version="3.35.1" source="sam0\drivers\dsu\crc32\crc32.c" changed="False" content-id="Atmel.ASF" />
-          <file path="src/ASF/sam0/drivers/dsu/crc32/crc32.h" framework="" version="3.35.1" source="sam0\drivers\dsu\crc32\crc32.h" changed="False" content-id="Atmel.ASF" />
-          <file path="src/ASF/sam0/drivers/pac/pac.h" framework="" version="3.35.1" source="sam0\drivers\pac\pac.h" changed="False" content-id="Atmel.ASF" />
-          <file path="src/ASF/sam0/drivers/pac/pac_sam_d_r_h/pac.c" framework="" version="3.35.1" source="sam0\drivers\pac\pac_sam_d_r_h\pac.c" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/sam0/utils/stdio/stdio_serial/stdio_serial.h" framework="" version="3.35.1" source="sam0\utils\stdio\stdio_serial\stdio_serial.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/common/services/serial/sam0_usart/usart_serial.h" framework="" version="3.35.1" source="common\services\serial\sam0_usart\usart_serial.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/common/services/serial/serial.h" framework="" version="3.35.1" source="common\services\serial\serial.h" changed="False" content-id="Atmel.ASF" />
@@ -257,6 +254,11 @@
           <file path="src/ASF/sam0/drivers/wdt/quick_start_callback/qs_wdt_callback.h" framework="" version="3.35.1" source="sam0\drivers\wdt\quick_start_callback\qs_wdt_callback.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled/at25dfx_hal.h" framework="" version="3.35.1" source="common2\components\memory\serial_flash\at25dfx\hal\spi_polled\at25dfx_hal.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled/at25dfx_priv_hal.h" framework="" version="3.35.1" source="common2\components\memory\serial_flash\at25dfx\hal\spi_polled\at25dfx_priv_hal.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/common/services/crc32/crc32.c" framework="" version="3.35.1" source="common\services\crc32\crc32.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/common/services/crc32/crc32.h" framework="" version="3.35.1" source="common\services\crc32\crc32.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/common2/services/delay/sam0/cycle_counter.c" framework="" version="3.35.1" source="common2\services\delay\sam0\cycle_counter.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/common2/services/delay/sam0/cycle_counter.h" framework="" version="3.35.1" source="common2\services\delay\sam0\cycle_counter.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/common2/services/delay/delay.h" framework="" version="3.35.1" source="common2\services\delay\delay.h" changed="False" content-id="Atmel.ASF" />
         </files>
         <documentation help="http://asf.atmel.com/docs/3.35.1/common.applications.user_application.sam0_system.user_board.atsamd21g18a/html/index.html" />
         <offline-documentation help="" />
@@ -311,6 +313,7 @@
       <Value>SPI_CALLBACK_MODE=true</Value>
       <Value>USART_CALLBACK_MODE=true</Value>
       <Value>WDT_CALLBACK_MODE=true</Value>
+      <Value>CYCLE_MODE</Value>
     </ListValues>
   </armgcc.compiler.symbols.DefSymbols>
   <armgcc.compiler.directories.IncludePaths>
@@ -342,15 +345,14 @@
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx</Value>
       <Value>../src/ASF/sam0/drivers/sercom</Value>
       <Value>../src/ASF/sam0/drivers/sercom/spi</Value>
-      <Value>../src/ASF/sam0/drivers/dsu</Value>
-      <Value>../src/ASF/sam0/drivers/dsu/crc32</Value>
-      <Value>../src/ASF/sam0/drivers/pac</Value>
-      <Value>../src/ASF/sam0/drivers/pac/pac_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/utils/stdio/stdio_serial</Value>
       <Value>../src/ASF/common/services/serial</Value>
       <Value>../src/ASF/sam0/drivers/sercom/usart</Value>
       <Value>../src/ASF/sam0/drivers/wdt</Value>
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
+      <Value>../src/ASF/common/services/crc32</Value>
+      <Value>../src/ASF/common2/services/delay</Value>
+      <Value>../src/ASF/common2/services/delay/sam0</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.level>Optimize for size (-Os)</armgcc.compiler.optimization.level>
@@ -401,18 +403,17 @@
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx</Value>
       <Value>../src/ASF/sam0/drivers/sercom</Value>
       <Value>../src/ASF/sam0/drivers/sercom/spi</Value>
-      <Value>../src/ASF/sam0/drivers/dsu</Value>
-      <Value>../src/ASF/sam0/drivers/dsu/crc32</Value>
-      <Value>../src/ASF/sam0/drivers/pac</Value>
-      <Value>../src/ASF/sam0/drivers/pac/pac_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/utils/stdio/stdio_serial</Value>
       <Value>../src/ASF/common/services/serial</Value>
       <Value>../src/ASF/sam0/drivers/sercom/usart</Value>
       <Value>../src/ASF/sam0/drivers/wdt</Value>
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
+      <Value>../src/ASF/common/services/crc32</Value>
+      <Value>../src/ASF/common2/services/delay</Value>
+      <Value>../src/ASF/common2/services/delay/sam0</Value>
     </ListValues>
   </armgcc.assembler.general.IncludePaths>
-  <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=USER_BOARD -DSPI_CALLBACK_MODE=true -DUSART_CALLBACK_MODE=true -DWDT_CALLBACK_MODE=true</armgcc.preprocessingassembler.general.AssemblerFlags>
+  <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=USER_BOARD -DSPI_CALLBACK_MODE=true -DUSART_CALLBACK_MODE=true -DWDT_CALLBACK_MODE=true -DCYCLE_MODE</armgcc.preprocessingassembler.general.AssemblerFlags>
   <armgcc.preprocessingassembler.general.IncludePaths>
     <ListValues>
       <Value>../src/ASF/common/boards</Value>
@@ -442,15 +443,14 @@
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx</Value>
       <Value>../src/ASF/sam0/drivers/sercom</Value>
       <Value>../src/ASF/sam0/drivers/sercom/spi</Value>
-      <Value>../src/ASF/sam0/drivers/dsu</Value>
-      <Value>../src/ASF/sam0/drivers/dsu/crc32</Value>
-      <Value>../src/ASF/sam0/drivers/pac</Value>
-      <Value>../src/ASF/sam0/drivers/pac/pac_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/utils/stdio/stdio_serial</Value>
       <Value>../src/ASF/common/services/serial</Value>
       <Value>../src/ASF/sam0/drivers/sercom/usart</Value>
       <Value>../src/ASF/sam0/drivers/wdt</Value>
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
+      <Value>../src/ASF/common/services/crc32</Value>
+      <Value>../src/ASF/common2/services/delay</Value>
+      <Value>../src/ASF/common2/services/delay/sam0</Value>
     </ListValues>
   </armgcc.preprocessingassembler.general.IncludePaths>
 </ArmGcc>
@@ -472,6 +472,7 @@
       <Value>SPI_CALLBACK_MODE=true</Value>
       <Value>USART_CALLBACK_MODE=true</Value>
       <Value>WDT_CALLBACK_MODE=true</Value>
+      <Value>CYCLE_MODE</Value>
     </ListValues>
   </armgcc.compiler.symbols.DefSymbols>
   <armgcc.compiler.directories.IncludePaths>
@@ -503,15 +504,14 @@
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx</Value>
       <Value>../src/ASF/sam0/drivers/sercom</Value>
       <Value>../src/ASF/sam0/drivers/sercom/spi</Value>
-      <Value>../src/ASF/sam0/drivers/dsu</Value>
-      <Value>../src/ASF/sam0/drivers/dsu/crc32</Value>
-      <Value>../src/ASF/sam0/drivers/pac</Value>
-      <Value>../src/ASF/sam0/drivers/pac/pac_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/utils/stdio/stdio_serial</Value>
       <Value>../src/ASF/common/services/serial</Value>
       <Value>../src/ASF/sam0/drivers/sercom/usart</Value>
       <Value>../src/ASF/sam0/drivers/wdt</Value>
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
+      <Value>../src/ASF/common/services/crc32</Value>
+      <Value>../src/ASF/common2/services/delay</Value>
+      <Value>../src/ASF/common2/services/delay/sam0</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.OtherFlags>-fdata-sections</armgcc.compiler.optimization.OtherFlags>
@@ -563,19 +563,18 @@
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx</Value>
       <Value>../src/ASF/sam0/drivers/sercom</Value>
       <Value>../src/ASF/sam0/drivers/sercom/spi</Value>
-      <Value>../src/ASF/sam0/drivers/dsu</Value>
-      <Value>../src/ASF/sam0/drivers/dsu/crc32</Value>
-      <Value>../src/ASF/sam0/drivers/pac</Value>
-      <Value>../src/ASF/sam0/drivers/pac/pac_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/utils/stdio/stdio_serial</Value>
       <Value>../src/ASF/common/services/serial</Value>
       <Value>../src/ASF/sam0/drivers/sercom/usart</Value>
       <Value>../src/ASF/sam0/drivers/wdt</Value>
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
+      <Value>../src/ASF/common/services/crc32</Value>
+      <Value>../src/ASF/common2/services/delay</Value>
+      <Value>../src/ASF/common2/services/delay/sam0</Value>
     </ListValues>
   </armgcc.assembler.general.IncludePaths>
   <armgcc.assembler.debugging.DebugLevel>Default (-g)</armgcc.assembler.debugging.DebugLevel>
-  <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=USER_BOARD -DSPI_CALLBACK_MODE=true -DUSART_CALLBACK_MODE=true -DWDT_CALLBACK_MODE=true</armgcc.preprocessingassembler.general.AssemblerFlags>
+  <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=USER_BOARD -DSPI_CALLBACK_MODE=true -DUSART_CALLBACK_MODE=true -DWDT_CALLBACK_MODE=true -DCYCLE_MODE</armgcc.preprocessingassembler.general.AssemblerFlags>
   <armgcc.preprocessingassembler.general.IncludePaths>
     <ListValues>
       <Value>../src/ASF/common/boards</Value>
@@ -605,15 +604,14 @@
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx</Value>
       <Value>../src/ASF/sam0/drivers/sercom</Value>
       <Value>../src/ASF/sam0/drivers/sercom/spi</Value>
-      <Value>../src/ASF/sam0/drivers/dsu</Value>
-      <Value>../src/ASF/sam0/drivers/dsu/crc32</Value>
-      <Value>../src/ASF/sam0/drivers/pac</Value>
-      <Value>../src/ASF/sam0/drivers/pac/pac_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/utils/stdio/stdio_serial</Value>
       <Value>../src/ASF/common/services/serial</Value>
       <Value>../src/ASF/sam0/drivers/sercom/usart</Value>
       <Value>../src/ASF/sam0/drivers/wdt</Value>
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
+      <Value>../src/ASF/common/services/crc32</Value>
+      <Value>../src/ASF/common2/services/delay</Value>
+      <Value>../src/ASF/common2/services/delay/sam0</Value>
     </ListValues>
   </armgcc.preprocessingassembler.general.IncludePaths>
   <armgcc.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcc.preprocessingassembler.debugging.DebugLevel>
@@ -633,21 +631,21 @@
     <Folder Include="src\ASF\common2\components\memory\serial_flash\at25dfx\hal\" />
     <Folder Include="src\ASF\common2\components\memory\serial_flash\at25dfx\hal\spi_polled\" />
     <Folder Include="src\ASF\common2\components\memory\serial_flash\at25dfx\quick_start_basic\" />
+    <Folder Include="src\ASF\common2\services\" />
+    <Folder Include="src\ASF\common2\services\delay\" />
+    <Folder Include="src\ASF\common2\services\delay\sam0\" />
     <Folder Include="src\ASF\common\" />
     <Folder Include="src\ASF\common\boards\" />
     <Folder Include="src\ASF\common\services\" />
+    <Folder Include="src\ASF\common\services\crc32\" />
     <Folder Include="src\ASF\common\services\serial\" />
     <Folder Include="src\ASF\common\services\serial\sam0_usart\" />
     <Folder Include="src\ASF\common\utils\" />
     <Folder Include="src\ASF\common\utils\interrupt\" />
     <Folder Include="src\ASF\sam0\" />
     <Folder Include="src\ASF\sam0\drivers\" />
-    <Folder Include="src\ASF\sam0\drivers\dsu\" />
-    <Folder Include="src\ASF\sam0\drivers\dsu\crc32\" />
     <Folder Include="src\ASF\sam0\drivers\nvm\" />
     <Folder Include="src\ASF\sam0\drivers\nvm\quick_start_basic\" />
-    <Folder Include="src\ASF\sam0\drivers\pac\" />
-    <Folder Include="src\ASF\sam0\drivers\pac\pac_sam_d_r_h\" />
     <Folder Include="src\ASF\sam0\drivers\port\" />
     <Folder Include="src\ASF\sam0\drivers\port\quick_start\" />
     <Folder Include="src\ASF\sam0\drivers\sercom\" />
@@ -724,10 +722,19 @@
     <None Include="src\ASF\common2\components\memory\serial_flash\at25dfx\hal\spi_polled\at25dfx_priv_hal.h">
       <SubType>compile</SubType>
     </None>
-    <Compile Include="src\ASF\sam0\drivers\dsu\crc32\crc32.c">
+    <None Include="src\ASF\common2\services\delay\delay.h">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="src\ASF\common2\services\delay\sam0\cycle_counter.c">
       <SubType>compile</SubType>
     </Compile>
-    <None Include="src\ASF\sam0\drivers\dsu\crc32\crc32.h">
+    <None Include="src\ASF\common2\services\delay\sam0\cycle_counter.h">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="src\ASF\common\services\crc32\crc32.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\ASF\common\services\crc32\crc32.h">
       <SubType>compile</SubType>
     </None>
     <Compile Include="src\ASF\sam0\drivers\nvm\nvm.c">
@@ -739,12 +746,6 @@
     <None Include="src\ASF\sam0\drivers\nvm\nvm.h">
       <SubType>compile</SubType>
     </None>
-    <None Include="src\ASF\sam0\drivers\pac\pac.h">
-      <SubType>compile</SubType>
-    </None>
-    <Compile Include="src\ASF\sam0\drivers\pac\pac_sam_d_r_h\pac.c">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\ASF\sam0\drivers\port\port.c">
       <SubType>compile</SubType>
     </Compile>

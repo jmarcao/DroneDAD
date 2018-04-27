@@ -153,4 +153,15 @@ enum status_code get_application_metadata(uint8_t index, struct application_meta
 	return status;
 };
 
+enum status_code get_flash_header(struct flash_header* fh) {
+	enum status_code status;
+	
+	status = dd_flash_read_data(FLASH_HEADER_ADDR, &fh, sizeof (struct flash_header));
+	if(status != STATUS_OK) {
+		return status;
+	}
+	
+	return status;	
+}
+
 #endif /* FLASHSTORAGE_H_ */

@@ -91,7 +91,11 @@ static float filtered_roll = 0;
 static const float weight = 0.9;
 static struct mpu9150_output_data mpuData;
 static int previousStallAlertValue = 0;
+int16_t int_pitch_deg = 0;
+int16_t int_roll_deg = 0;
+bool flip = true;
 static void handle_mpu_timeout() {
+	/*
 	get_mpu9150_reading(&mpuData);
 	
 	float pitch_bottom_eq = (float)sqrt((mpuData.ay * mpuData.ay) + (mpuData.az * mpuData.az));
@@ -109,6 +113,22 @@ static void handle_mpu_timeout() {
 	
 	int16_t int_pitch_deg = (int16_t)(filtered_pitch*((float)90/1.5708));
 	int16_t int_roll_deg = (int16_t)(filtered_roll*((float)90/1.5708));
+	*/
+	
+	if(flip) {
+		int_pitch_deg += 5;
+		int_roll_deg +=5;
+		if(int_pitch_deg == 90) {
+			flip = !flip;
+		}
+	}
+	else {
+		int_pitch_deg -= 5;
+		int_roll_deg -= 5;
+		if(int_pitch_deg == 0) {
+			flip = !flip;
+		}
+	}
 	
 	char stallAngleBuf[33] = { '\0' };
 	if(abs(int_pitch_deg) > stallAngle) {
@@ -143,11 +163,11 @@ static void handle_mpu_timeout() {
 	printf("Pitch: %d\r\nRoll: %d\r\n", abs(int_pitch_deg), abs(int_roll_deg));
 	char sendBuf[33] = { '\0' };
 	itoa(mpuData.ax, sendBuf, 10);
-	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AX, &sendBuf[0], sizeof(char)*33, 0, 0);
+	//mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AX, &sendBuf[0], sizeof(char)*33, 0, 0);
 	itoa(mpuData.ay, sendBuf, 10);
-	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AY, &sendBuf[0], sizeof(char)*33, 0, 0);
+	//mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AY, &sendBuf[0], sizeof(char)*33, 0, 0);
 	itoa(mpuData.az, sendBuf, 10);
-	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AZ, &sendBuf[0], sizeof(char)*33, 0, 0);
+	//mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AZ, &sendBuf[0], sizeof(char)*33, 0, 0);
 	itoa(int_pitch_deg, sendBuf, 10);
 	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_PITCH, &sendBuf[0], sizeof(char)*33, 0, 0);
 	itoa(int_roll_deg, sendBuf, 10);
@@ -448,13 +468,13 @@ static void dd_mqtt_loop() {
 	char topic[strlen(MAIN_CHAT_TOPIC) + MAIN_CHAT_USER_NAME_SIZE + 1];
 	
 	set_uart_callback();
-	bool mpu_present = detect_mpu9150();
+	bool mpu_present = true;//detect_mpu9150();
 	if(mpu_present) {
 		mpuPoll_configure_timer();
 	}
 	
 	/* Setup user name first */
-	mqtt_user[0] = 'B';
+	mqtt_user[0] = 'A';
 	printf("Username is %d\r\n", mqtt_user[0]);
 	sprintf(topic, "%s%s", MAIN_CHAT_TOPIC, PUBLISH_TOPIC);
 

@@ -17,7 +17,7 @@ Application code
 #include "LEDDriver.h"
 #include "GyroscopeDriver.h"
 #include "FlashStorage.h"
-#include "SerialConsole.h"
+#include "SerialConsole.h"f
 #include "CLIHandler.h"
 #include "dd_mqtt.h"
 #include "adc_temp.h"
@@ -74,7 +74,8 @@ int main(void) {
 	
 	// Enter the mqtt loop. Ideally we would add CLI via callback here.
 	handleUpdateRequest();
-	// dd_mqtt_loop();
+	port_pin_set_output_level(PIN_PB02, false);
+	dd_mqtt_loop();
 
 	printf("main: done.\r\n");
 	while (1) {

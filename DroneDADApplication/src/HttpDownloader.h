@@ -45,6 +45,7 @@ static uint32_t fw_writeAddr = 0x2000;
 static uint32_t fw_metadataAddr = 0x1000;
 static uint32_t fw_rollingCRC;
 static uint32_t fw_dataLen;
+static uint32_t metadata_crc;
 static char serverVersion[METADATA_VERSION_LENGTH+1];
 static char metadata_crc_buffer[8 + 1];
 
@@ -145,16 +146,6 @@ static void store_metadata_file(char *data, uint32_t length)
 }
 
 static void parse_metadata_buffer() {
-	/*
-	 Metadata file format
-		VMMmmrr.FFFFFFFF
-		Version
-		 Major Number
-		   Minor Number
-		     Revision
-			    CRC-32
-	*/
-
 	if(metadata_buffer.data[0] != 'V') {
 		printf("Unexpected data in metadata_buffer!\r\n");
 		return;
@@ -174,11 +165,11 @@ static void parse_metadata_buffer() {
 	
 	printf("Server Version is %s\r\n", &serverVersion[0]);
 	printf("Server's FW CRC is %s\r\n", &metadata_crc_buffer[0]);
+	//metadata_crc = strtol(metadata_crc_buffer, NULL, 16);
 }
 
 static void store_firmware_file(char *data, uint32_t length)
 {
-	printf("Entering %s\r\n", __func__);
 	printf("Storing %d bytes in buffer\r\n", length);
 	fw_dataLen += length;
 
@@ -203,10 +194,7 @@ static void store_firmware_file(char *data, uint32_t length)
 	}
 }
 
-static void finalize_firmware_update() {
-	printf("Entering %s\r\n", __func__);
-	uint32_t metadata_crc = strtol(&metadata_crc_buffer[0], NULL, 16);
-	
+static void finalize_firmware_update() {	
 	if(firmware_buffer.end != 0) {
 		// We have some leftover data to write. Write it!
 		dd_flash_write_data(fw_writeAddr, &firmware_buffer.data[0], firmware_buffer.end);
@@ -214,8 +202,10 @@ static void finalize_firmware_update() {
 		firmware_buffer.end = 0;
 	}
 
-	printf("CRC of downloaded firmware: %x\r\n", fw_rollingCRC);
-	if(true /*metadata_crc == fw_rollingCRC*/) { // CRC32 is not working...
+	char fw_rollingCRCBuffer[9];
+	sprintf(fw_rollingCRCBuffer, "%x", fw_rollingCRC);
+	if(!strcmp(&metadata_crc_buffer[0], &fw_rollingCRCBuffer[0])) {
+		printf("CRC Verified.\r\n");
 		// CRC matched. Our download was all good.
 		struct application_metadata md;
 		md.crc = fw_rollingCRC;
@@ -235,13 +225,11 @@ static void finalize_firmware_update() {
 		bs.install_idx = 0;
 		set_boot_status(&bs);
 		
-		struct boot_status bss;
-		get_boot_status(&bss);
-		
 		printf("Wrote FW Image to flash. Will update on next boot.\r\n");
 	}
 	else {
 		printf("Firmware download completed, but CRC was not correct!\r\n");
+		printf("Expected %x but was %x\r\n", metadata_crc, fw_rollingCRC);
 	}
 }
 
@@ -583,6 +571,7 @@ static void handleUpdateRequest() {
 	// Download the latest firmware metadata from the server.
 	printf("Downloading metadata....\r\n");
 	uint32_t latestVersion = getServerFirmwareVersion();
+	
 	
 	int currentVersion = 0;
 	if(latestVersion > currentVersion) {
