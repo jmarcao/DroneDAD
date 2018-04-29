@@ -13,6 +13,7 @@
 
 #include "FlashStorage.h"
 #include "NVMStorage.h"
+#include "LEDDriver.h"
 
 /** File download processing state. */
 static download_state dl_state = NOT_READY;
@@ -537,6 +538,9 @@ static bool downloadFirmwareUpdate() {
 static void handleUpdateRequest() {
 	tstrWifiInitParam param;
 	int8_t ret;
+	
+	// Special LED Pattern to signify FW Update
+	set_otafu_lighting();
 		
 	/* Initialize the HTTP client service. */
 	configure_http_client();

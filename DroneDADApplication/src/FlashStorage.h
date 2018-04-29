@@ -30,6 +30,7 @@ struct application_metadata {
 
 struct flash_header {
 	uint32_t metadata_addr[MAX_APPLICATION_COUNT];
+	uint8_t last_index;
 };
 
 
@@ -53,7 +54,7 @@ static void at25dfx_init(void)
 	status = at25dfx_chip_init(&at25dfx_chip, &at25dfx_spi, &at25dfx_chip_config);
 }
 
-enum status_code dd_flash_read_data(uint32_t addr, uint8_t* buffer, uint32_t buffer_len) {
+static enum status_code dd_flash_read_data(uint32_t addr, uint8_t* buffer, uint32_t buffer_len) {
 	enum status_code status;
 	
 	status = at25dfx_chip_wake(&at25dfx_chip);
@@ -74,7 +75,7 @@ enum status_code dd_flash_read_data(uint32_t addr, uint8_t* buffer, uint32_t buf
 	return status;
 };
 
-enum status_code dd_flash_write_data(uint32_t addr, uint8_t* buffer, uint32_t buffer_len) {
+static enum status_code dd_flash_write_data(uint32_t addr, uint8_t* buffer, uint32_t buffer_len) {
 	enum status_code status;
 	
 	status = at25dfx_chip_wake(&at25dfx_chip);
@@ -122,7 +123,7 @@ enum status_code dd_flash_write_data(uint32_t addr, uint8_t* buffer, uint32_t bu
 	return status;
 };
 
-enum status_code get_application_metadata_addr(uint8_t index, uint32_t* addr) {
+static enum status_code get_application_metadata_addr(uint8_t index, uint32_t* addr) {
 	enum status_code status;
 	struct flash_header fh;
 	
@@ -136,7 +137,7 @@ enum status_code get_application_metadata_addr(uint8_t index, uint32_t* addr) {
 	return status;
 }
 
-enum status_code get_application_metadata(uint8_t index, struct application_metadata* am) {
+static enum status_code get_application_metadata(uint8_t index, struct application_metadata* am) {
 	enum status_code status;
 	uint32_t metadata_addr;
 	
@@ -153,7 +154,7 @@ enum status_code get_application_metadata(uint8_t index, struct application_meta
 	return status;
 };
 
-enum status_code get_flash_header(struct flash_header* fh) {
+static enum status_code get_flash_header(struct flash_header* fh) {
 	enum status_code status;
 	
 	status = dd_flash_read_data(FLASH_HEADER_ADDR, &fh, sizeof (struct flash_header));

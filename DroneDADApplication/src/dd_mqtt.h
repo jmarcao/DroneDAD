@@ -10,9 +10,6 @@
 #include "MPU9150Driver.h"
 #include "LEDDriver.h"
 
-/* Max size of UART buffer. */
-#define MAIN_CHAT_BUFFER_SIZE 64
-
 /* Max size of MQTT buffer. */
 #define MAIN_MQTT_BUFFER_SIZE 128
 
@@ -40,6 +37,8 @@ static bool mqtt_ready = false;
 static bool mqtt_exit = false; // Exit flag for MQTT loop.
 static bool mpu_present = false;
 
+static uint8 ip_addr[4];
+
 /*
  * A MQTT broker server which was connected.
  * m2m.eclipse.org is public MQTT broker.
@@ -62,15 +61,6 @@ static struct mqtt_module mqtt_inst;
 /* Receive buffer of the MQTT service. */
 static char mqtt_buffer[MAIN_MQTT_BUFFER_SIZE];
 
-/** UART buffer. */
-static char uart_buffer[MAIN_CHAT_BUFFER_SIZE];
-
-/** Written size of UART buffer. */
-static int uart_buffer_written = 0;
-
-/** A buffer of character from the serial. */
-static uint16_t uart_ch_buffer;
-
 /** Instance of Timer module. */
 struct sw_timer_module mqtt_swt_module_inst;
 
@@ -90,21 +80,21 @@ static float filtered_pitch = 0;
 static float filtered_roll = 0;
 static const float weight = 0.9;
 static struct mpu9150_output_data mpuData;
+static struct lsm6ds3_output_data lsmData;
 static int previousStallAlertValue = 0;
 int16_t int_pitch_deg = 0;
 int16_t int_roll_deg = 0;
 bool flip = true;
 static void handle_mpu_timeout() {
-	/*
-	get_mpu9150_reading(&mpuData);
+	lsm6ds3_readAllData(&lsmData);
 	
-	float pitch_bottom_eq = (float)sqrt((mpuData.ay * mpuData.ay) + (mpuData.az * mpuData.az));
-	float pitch_top_eq = (float)mpuData.ax;
+	float pitch_bottom_eq = (float)sqrt((lsmData.ay * lsmData.ay) + (lsmData.az * lsmData.az));
+	float pitch_top_eq = (float)lsmData.ax;
 	float pitch = atan(pitch_top_eq / pitch_bottom_eq);
 	filtered_pitch = (1-weight)*filtered_pitch + (weight)*pitch;
 	
-	float roll_bottom_eq = (float)sqrt((mpuData.az * mpuData.az) + (mpuData.ax * mpuData.ax));
-	float roll_top_eq = (float)mpuData.ay;
+	float roll_bottom_eq = (float)sqrt((lsmData.az * lsmData.az) + (lsmData.ax * lsmData.ax));
+	float roll_top_eq = (float)lsmData.ay;
 	float roll = atan(roll_top_eq / roll_bottom_eq);
 	filtered_roll = (1-weight)*filtered_roll + (weight)*roll;
 	
@@ -113,8 +103,8 @@ static void handle_mpu_timeout() {
 	
 	int16_t int_pitch_deg = (int16_t)(filtered_pitch*((float)90/1.5708));
 	int16_t int_roll_deg = (int16_t)(filtered_roll*((float)90/1.5708));
-	*/
 	
+	/*
 	if(flip) {
 		int_pitch_deg += 5;
 		int_roll_deg +=5;
@@ -129,6 +119,7 @@ static void handle_mpu_timeout() {
 			flip = !flip;
 		}
 	}
+	*/
 	
 	char stallAngleBuf[33] = { '\0' };
 	if(abs(int_pitch_deg) > stallAngle) {
@@ -163,11 +154,11 @@ static void handle_mpu_timeout() {
 	printf("Pitch: %d\r\nRoll: %d\r\n", abs(int_pitch_deg), abs(int_roll_deg));
 	char sendBuf[33] = { '\0' };
 	itoa(mpuData.ax, sendBuf, 10);
-	//mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AX, &sendBuf[0], sizeof(char)*33, 0, 0);
+	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AX, &sendBuf[0], sizeof(char)*33, 0, 0);
 	itoa(mpuData.ay, sendBuf, 10);
-	//mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AY, &sendBuf[0], sizeof(char)*33, 0, 0);
+	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AY, &sendBuf[0], sizeof(char)*33, 0, 0);
 	itoa(mpuData.az, sendBuf, 10);
-	//mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AZ, &sendBuf[0], sizeof(char)*33, 0, 0);
+	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_AZ, &sendBuf[0], sizeof(char)*33, 0, 0);
 	itoa(int_pitch_deg, sendBuf, 10);
 	mqtt_publish(&mqtt_inst, MAIN_CHAT_TOPIC PUBLISH_TOPIC SUBTOPIC_PITCH, &sendBuf[0], sizeof(char)*33, 0, 0);
 	itoa(int_roll_deg, sendBuf, 10);
@@ -191,29 +182,11 @@ static void mpuPoll_configure_timer(void)
 /************************************************************************/
 
 /**
- * \brief Callback of USART input.
- *
- * \param[in] module USART module structure.
- */
-static void uart_callback(const struct usart_module *const module)
-{
-	/* If input string is bigger than buffer size limit, ignore the excess part. */
-	if (uart_buffer_written < MAIN_CHAT_BUFFER_SIZE) {
-		uart_buffer[uart_buffer_written++] = uart_ch_buffer & 0xFF;
-	}
-}
-
-static void set_uart_callback() {
-	usart_register_callback(&cdc_uart_module, (usart_callback_t)uart_callback, USART_CALLBACK_BUFFER_RECEIVED);
-}
-
-/**
  * \brief Callback to get the Wi-Fi status update.
  */
 static void wifi_callback(uint8 msg_type, void *msg_data)
 {
 	tstrM2mWifiStateChanged *msg_wifi_state;
-	uint8 *msg_ip_addr;
 
 	switch (msg_type) {
 	case M2M_WIFI_RESP_CON_STATE_CHANGED:
@@ -235,9 +208,11 @@ static void wifi_callback(uint8 msg_type, void *msg_data)
 		break;
 
 	case M2M_WIFI_REQ_DHCP_CONF:
-		msg_ip_addr = (uint8 *)msg_data;
+		for(int i = 0; i < 4; i++) {
+			ip_addr[i] = ((uint8_t*)msg_data)[i];
+		}
 		printf("Wi-Fi IP is %u.%u.%u.%u\r\n",
-				msg_ip_addr[0], msg_ip_addr[1], msg_ip_addr[2], msg_ip_addr[3]);
+				ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3]);
 		/* Try to connect to MQTT broker when Wi-Fi was connected. */
 		mqtt_connect(&mqtt_inst, main_mqtt_broker);
 		break;
@@ -302,8 +277,6 @@ static void mqtt_callback(struct mqtt_module *module_inst, int type, union mqtt_
 		if (data->connected.result == MQTT_CONN_RESULT_ACCEPT) {
 			/* Subscribe chat topic. */
 			mqtt_subscribe(module_inst, MAIN_CHAT_TOPIC SUBSCRIBE_TOPIC "#", 0);
-			/* Enable USART receiving callback. */
-			usart_enable_callback(&cdc_uart_module, USART_CALLBACK_BUFFER_RECEIVED);
 			printf("Preparation of the chat has been completed.\r\n");
 			mqtt_ready = true;
 		} else {
@@ -385,7 +358,6 @@ static void mqtt_callback(struct mqtt_module *module_inst, int type, union mqtt_
 	case MQTT_CALLBACK_DISCONNECTED:
 		/* Stop timer and USART callback. */
 		printf("MQTT disconnected\r\n");
-		usart_disable_callback(&cdc_uart_module, USART_CALLBACK_BUFFER_RECEIVED);
 		break;
 	}
 }
@@ -429,49 +401,22 @@ static void configure_mqtt(void)
 	}
 }
 
-/**
- * \brief Checking the USART buffer.
- *
- * Finding the new line character(\n or \r\n) in the USART buffer.
- * If buffer was overflowed, Sending the buffer.
- */
-static void check_usart_buffer(char *topic)
-{
-	int i;
-
-	/* Publish the input string when newline was received or input string is bigger than buffer size limit. */
-	if (uart_buffer_written >= MAIN_CHAT_BUFFER_SIZE) {
-		mqtt_publish(&mqtt_inst, topic, uart_buffer, MAIN_CHAT_BUFFER_SIZE, 0, 0);
-		uart_buffer_written = 0;
-	} else {
-		for (i = 0; i < uart_buffer_written; i++) {
-			/* Find newline character ('\n' or '\r\n') and publish the previous string . */
-			if (uart_buffer[i] == '\n' || uart_buffer[i] == '\r' ) {
-				mqtt_publish(&mqtt_inst, topic, uart_buffer, (i > 0 && uart_buffer[i - 1] == '\r') ? i - 1 : i, 0, 0);
-				/* Move remain data to start of the buffer. */
-				if (uart_buffer_written > i + 1) {
-					memmove(uart_buffer, uart_buffer + i + 1, uart_buffer_written - i - 1);
-					uart_buffer_written = uart_buffer_written - i - 1;
-				} else {
-					uart_buffer_written = 0;
-				}
-
-				break;
-			}
-		}
+void mqtt_process() {
+	/* Handle pending events from network controller. */
+	m2m_wifi_handle_events(NULL);
+	/* Checks the timer timeout. */
+	sw_timer_task(&mqtt_swt_module_inst);
+	if(mqtt_ready) {
+		sw_timer_task(&mpuPoll_swt_module_inst);
 	}
 }
 
-static void dd_mqtt_loop() {
+static void mqtt_start() {
 	tstrWifiInitParam param;
 	int8_t ret;
 	char topic[strlen(MAIN_CHAT_TOPIC) + MAIN_CHAT_USER_NAME_SIZE + 1];
 	
-	set_uart_callback();
-	bool mpu_present = true;//detect_mpu9150();
-	if(mpu_present) {
-		mpuPoll_configure_timer();
-	}
+	mpuPoll_configure_timer();
 	
 	/* Setup user name first */
 	mqtt_user[0] = 'A';
@@ -497,20 +442,6 @@ static void dd_mqtt_loop() {
 	/* Connect to router. */
 	m2m_wifi_connect((char *)MAIN_WLAN_SSID, sizeof(MAIN_WLAN_SSID),
 	MAIN_WLAN_AUTH, (char *)MAIN_WLAN_PSK, M2M_WIFI_CH_ALL);
-	
-	while (!mqtt_exit) {
-		/* Handle pending events from network controller. */
-		m2m_wifi_handle_events(NULL);
-		/* Try to read user input from USART. */
-		usart_read_job(&cdc_uart_module, &uart_ch_buffer);
-		/* Checks the timer timeout. */
-		sw_timer_task(&mqtt_swt_module_inst);
-		if(mqtt_ready && mpu_present) {
-			sw_timer_task(&mpuPoll_swt_module_inst);
-		}
-		/* Checks the USART buffer. */
-		check_usart_buffer(topic);
-	}
 }
 
 

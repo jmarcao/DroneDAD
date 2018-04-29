@@ -486,22 +486,7 @@ enum status_code write_application_to_nvm(uint32_t flash_addr, uint32_t data_len
 		printf("Wrote %d of %d bytes.\r", (data_len - dataRemaining), data_len);
 		i += CHUNK_LEN;
 	}
-	/*
-	for(unsigned int i = 0; i < data_len; i += CHUNK_LEN) {
-		status = dd_flash_read_data(flash_addr + i, &data[0], CHUNK_LEN);
-		if(status != STATUS_OK) {
-			printf("Failed Flash Read (%d)\r\n", status);
-			break;
-		}
-		crc32_recalculate(&data[0], CHUNK_LEN, &calculated_crc);
-		status = dd_nvm_row_write(APPLICATION_ROW + (i / CHUNK_LEN), &data[0], CHUNK_LEN);
-		if(status != STATUS_OK) {
-			printf("Failed NVM Write (%d)\r\n", status);
-			break;
-		}
-		printf("Wrote %d of %d bytes.\r", i, data_len);
-	}
-	*/
+
 	printf("\r\n");
 	
 	printf("%s: Flash Actual %x\r\n", __func__, calculated_crc);

@@ -147,10 +147,7 @@ static struct i2c_master_packet lp3944_rd_packet = {
 	.hs_master_code   = 0x00,
 };
 
-static void _lp3944_i2c_write(uint8_t addr, uint8_t value){
-	
-	return;
-	
+static void _lp3944_i2c_write(uint8_t addr, uint8_t value){	
 	enum status_code i2c_status;
 	lp3944_wr_packet.address = LP3944_SLAVE_ADDR;
 	lp3944_wr_packet.data_length = LP3944_WRITE_DATA_LENGTH;
@@ -166,9 +163,6 @@ static void _lp3944_i2c_write(uint8_t addr, uint8_t value){
 }
 
 static void _lp3944_i2c_read(uint8_t addr, uint8_t* value) {
-	
-	return;
-	
 	enum status_code i2c_status;
 	lp3944_wr_packet.address = LP3944_SLAVE_ADDR;
 	lp3944_wr_packet.data_length = LP3944_READ_DATA_LENGTH;
@@ -275,13 +269,14 @@ static void set_all_leds(uint8_t value) {
 	lp3944_set_led_bank(LED_BANK_2_REG, value);
 }
 
-static void setOTAFULighting() {
+static void set_otafu_lighting() {
 	lp3944_set_dim_period_0(500);
 	lp3944_set_duty_cycle_0(50);
+	lp3944_set_dim_period_1(100);
+	lp3944_set_duty_cycle_1(50);
 	
 	lp3944_set_led_bank(LED_BANK_1_REG, LED_DIM0);
-	delay_ms(250);
-	lp3944_set_led_bank(LED_BANK_2_REG, LED_DIM0);
+	lp3944_set_led_bank(LED_BANK_2_REG, LED_DIM1);
 }
 
 static void lp3944_init() {

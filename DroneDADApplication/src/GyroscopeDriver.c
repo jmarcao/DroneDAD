@@ -702,8 +702,8 @@ void lsm6ds3_init() {
 	status_t status;
 	status = checkChipPrecense();
 	setDefaultSettings();
-	//enableAccelero();
-	//enableGyroscope();
+	enableAccelero();
+	enableGyroscope();
 	status = begin();
 }
 
