@@ -26,24 +26,25 @@
     <OverrideVtorValue>exception_table</OverrideVtorValue>
     <BootSegment>2</BootSegment>
     <ResetRule>0</ResetRule>
-    <eraseonlaunchrule>0</eraseonlaunchrule>
+    <eraseonlaunchrule>1</eraseonlaunchrule>
     <EraseKey />
     <AsfFrameworkConfig>
       <framework-data>
         <options>
           <option id="common.boards" value="Add" config="" content-id="Atmel.ASF" />
           <option id="common.components.wifi.winc1500" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="common.services.crc32" value="Add" config="" content-id="Atmel.ASF" />
           <option id="common2.components.memory.serial_flash.at25dfx" value="Add" config="polled_spi" content-id="Atmel.ASF" />
-          <option id="sam0.drivers.dsu_crc32" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.drivers.nvm" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.drivers.port" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.drivers.rtc" value="Add" config="calendar_callback" content-id="Atmel.ASF" />
+          <option id="sam0.drivers.sercom.i2c.master" value="Add" config="polled" content-id="Atmel.ASF" />
           <option id="sam0.drivers.sercom.spi" value="Add" config="callback" content-id="Atmel.ASF" />
           <option id="sam0.drivers.sercom.usart" value="Add" config="callback" content-id="Atmel.ASF" />
           <option id="sam0.drivers.system" value="Add" config="" content-id="Atmel.ASF" />
           <option id="sam0.drivers.tcc" value="Add" config="callback" content-id="Atmel.ASF" />
           <option id="sam0.utils.stdio.stdio_serial" value="Add" config="" content-id="Atmel.ASF" />
-          <option id="sam0.drivers.sercom.i2c.master" value="Add" config="polled" content-id="Atmel.ASF" />
+          <option id="sam0.drivers.adc" value="Add" config="polled" content-id="Atmel.ASF" />
           <option id="sam0.utils.linker_scripts" value="Add" config="" content-id="Atmel.ASF" />
         </options>
         <configurations>
@@ -237,9 +238,6 @@
           <file path="src/ASF/sam0/drivers/sercom/spi/quick_start_master/qs_spi_master_basic.h" framework="" version="3.35.1" source="sam0\drivers\sercom\spi\quick_start_master\qs_spi_master_basic.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled/at25dfx_hal.h" framework="" version="3.35.1" source="common2\components\memory\serial_flash\at25dfx\hal\spi_polled\at25dfx_hal.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled/at25dfx_priv_hal.h" framework="" version="3.35.1" source="common2\components\memory\serial_flash\at25dfx\hal\spi_polled\at25dfx_priv_hal.h" changed="False" content-id="Atmel.ASF" />
-          <file path="src/ASF/sam0/drivers/dsu/crc32/crc32.c" framework="" version="3.35.1" source="sam0\drivers\dsu\crc32\crc32.c" changed="False" content-id="Atmel.ASF" />
-          <file path="src/ASF/sam0/drivers/dsu/crc32/crc32.h" framework="" version="3.35.1" source="sam0\drivers\dsu\crc32\crc32.h" changed="False" content-id="Atmel.ASF" />
-          <file path="src/ASF/sam0/drivers/pac/pac.h" framework="" version="3.35.1" source="sam0\drivers\pac\pac.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/sam0/drivers/pac/pac_sam_d_r_h/pac.c" framework="" version="3.35.1" source="sam0\drivers\pac\pac_sam_d_r_h\pac.c" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/sam0/drivers/nvm/nvm.c" framework="" version="3.35.1" source="sam0\drivers\nvm\nvm.c" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/sam0/drivers/nvm/quick_start_basic/qs_nvm_basic.h" framework="" version="3.35.1" source="sam0\drivers\nvm\quick_start_basic\qs_nvm_basic.h" changed="False" content-id="Atmel.ASF" />
@@ -334,6 +332,11 @@
           <file path="src/ASF/sam0/drivers/sercom/i2c/quick_start_master/qs_i2c_master_basic_use.h" framework="" version="3.35.1" source="sam0\drivers\sercom\i2c\quick_start_master\qs_i2c_master_basic_use.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/sam0/drivers/sercom/i2c/quick_start_master_dma/qs_i2c_master_dma.h" framework="" version="3.35.1" source="sam0\drivers\sercom\i2c\quick_start_master_dma\qs_i2c_master_dma.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/ASF/sam0/drivers/sercom/i2c/i2c_sam0/i2c_master.c" framework="" version="3.35.1" source="sam0\drivers\sercom\i2c\i2c_sam0\i2c_master.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/common/services/crc32/crc32.c" framework="" version="3.35.1" source="common\services\crc32\crc32.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/common/services/crc32/crc32.h" framework="" version="3.35.1" source="common\services\crc32\crc32.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/sam0/drivers/adc/adc.h" framework="" version="3.35.1" source="sam0\drivers\adc\adc.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/sam0/drivers/adc/adc_sam_d_r_h/adc.c" framework="" version="3.35.1" source="sam0\drivers\adc\adc_sam_d_r_h\adc.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/ASF/sam0/drivers/adc/adc_sam_d_r_h/adc_feature.h" framework="" version="3.35.1" source="sam0\drivers\adc\adc_sam_d_r_h\adc_feature.h" changed="False" content-id="Atmel.ASF" />
         </files>
         <documentation help="http://asf.atmel.com/docs/3.35.1/common.applications.user_application.sam0_system.user_board.atsamd21g18a/html/index.html" />
         <offline-documentation help="" />
@@ -351,12 +354,12 @@
     <com_atmel_avrdbg_tool_edbg>
       <ToolOptions>
         <InterfaceProperties>
-          <SwdClock>0</SwdClock>
+          <SwdClock>2000000</SwdClock>
         </InterfaceProperties>
         <InterfaceName>SWD</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.edbg</ToolType>
-      <ToolNumber>ATML2449020200009589</ToolNumber>
+      <ToolNumber>ATML2449020200009921</ToolNumber>
       <ToolName>EDBG MSD</ToolName>
     </com_atmel_avrdbg_tool_edbg>
     <avrtoolinterfaceclock>2000000</avrtoolinterfaceclock>
@@ -371,6 +374,17 @@
       <ToolNumber>J41800021450</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
+    <custom>
+      <ToolOptions xmlns="">
+        <InterfaceProperties>
+        </InterfaceProperties>
+        <InterfaceName>SWD</InterfaceName>
+      </ToolOptions>
+      <ToolType xmlns="">custom</ToolType>
+      <ToolNumber xmlns="">
+      </ToolNumber>
+      <ToolName xmlns="">Custom Programming Tool</ToolName>
+    </custom>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
@@ -392,6 +406,7 @@
       <Value>RTC_CALENDAR_ASYNC=true</Value>
       <Value>TCC_ASYNC=true</Value>
       <Value>I2C_MASTER_CALLBACK_MODE=false</Value>
+      <Value>ADC_CALLBACK_MODE=false</Value>
     </ListValues>
   </armgcc.compiler.symbols.DefSymbols>
   <armgcc.compiler.directories.IncludePaths>
@@ -423,10 +438,6 @@
       <Value>../src/ASF/sam0/drivers/sercom</Value>
       <Value>../src/ASF/sam0/drivers/sercom/spi</Value>
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
-      <Value>../src/ASF/sam0/drivers/dsu</Value>
-      <Value>../src/ASF/sam0/drivers/dsu/crc32</Value>
-      <Value>../src/ASF/sam0/drivers/pac</Value>
-      <Value>../src/ASF/sam0/drivers/pac/pac_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/drivers/nvm</Value>
       <Value>../src/ASF/sam0/drivers/sercom/usart</Value>
       <Value>../src/ASF/sam0/utils/stdio/stdio_serial</Value>
@@ -441,6 +452,9 @@
       <Value>../src/ASF/sam0/drivers/tcc</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
+      <Value>../src/ASF/common/services/crc32</Value>
+      <Value>../src/ASF/sam0/drivers/adc</Value>
+      <Value>../src/ASF/sam0/drivers/adc/adc_sam_d_r_h</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.level>Optimize for size (-Os)</armgcc.compiler.optimization.level>
@@ -453,16 +467,18 @@
     <ListValues>
       <Value>libarm_cortexM0l_math</Value>
       <Value>libm</Value>
+      <Value>libMQTT.a</Value>
     </ListValues>
   </armgcc.linker.libraries.Libraries>
   <armgcc.linker.libraries.LibrarySearchPaths>
     <ListValues>
       <Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value>
+      <Value>C:\Users\John\Documents\GitHub\DroneDAD\DroneDADApplication\src\iot\mqtt</Value>
     </ListValues>
   </armgcc.linker.libraries.LibrarySearchPaths>
   <armgcc.linker.optimization.GarbageCollectUnusedSections>True</armgcc.linker.optimization.GarbageCollectUnusedSections>
   <armgcc.linker.memorysettings.ExternalRAM />
-  <armgcc.linker.miscellaneous.LinkerFlags>-Wl,--entry=Reset_Handler -Wl,--cref -mthumb -T../src/ASF/sam0/utils/linker_scripts/samd21/gcc/samd21g18a_flash.ld -Wl,--section-start=.text=0x2000</armgcc.linker.miscellaneous.LinkerFlags>
+  <armgcc.linker.miscellaneous.LinkerFlags>-Wl,--entry=Reset_Handler -Wl,--cref -mthumb -T../src/ASF/sam0/utils/linker_scripts/samd21/gcc/samd21g18a_flash.ld  -lc -u _printf_float -Wl,--section-start=.text=0x4000</armgcc.linker.miscellaneous.LinkerFlags>
   <armgcc.assembler.general.IncludePaths>
     <ListValues>
       <Value>../src/ASF/common/boards</Value>
@@ -492,10 +508,6 @@
       <Value>../src/ASF/sam0/drivers/sercom</Value>
       <Value>../src/ASF/sam0/drivers/sercom/spi</Value>
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
-      <Value>../src/ASF/sam0/drivers/dsu</Value>
-      <Value>../src/ASF/sam0/drivers/dsu/crc32</Value>
-      <Value>../src/ASF/sam0/drivers/pac</Value>
-      <Value>../src/ASF/sam0/drivers/pac/pac_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/drivers/nvm</Value>
       <Value>../src/ASF/sam0/drivers/sercom/usart</Value>
       <Value>../src/ASF/sam0/utils/stdio/stdio_serial</Value>
@@ -510,9 +522,12 @@
       <Value>../src/ASF/sam0/drivers/tcc</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
+      <Value>../src/ASF/common/services/crc32</Value>
+      <Value>../src/ASF/sam0/drivers/adc</Value>
+      <Value>../src/ASF/sam0/drivers/adc/adc_sam_d_r_h</Value>
     </ListValues>
   </armgcc.assembler.general.IncludePaths>
-  <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=USER_BOARD -DSPI_CALLBACK_MODE=true -DUSART_CALLBACK_MODE=true -DSYSTICK_MODE -DEXTINT_CALLBACK_MODE=true -DRTC_CALENDAR_ASYNC=true -DTCC_ASYNC=true -DI2C_MASTER_CALLBACK_MODE=false</armgcc.preprocessingassembler.general.AssemblerFlags>
+  <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=USER_BOARD -DSPI_CALLBACK_MODE=true -DUSART_CALLBACK_MODE=true -DSYSTICK_MODE -DEXTINT_CALLBACK_MODE=true -DRTC_CALENDAR_ASYNC=true -DTCC_ASYNC=true -DI2C_MASTER_CALLBACK_MODE=false -DADC_CALLBACK_MODE=false</armgcc.preprocessingassembler.general.AssemblerFlags>
   <armgcc.preprocessingassembler.general.IncludePaths>
     <ListValues>
       <Value>../src/ASF/common/boards</Value>
@@ -542,10 +557,6 @@
       <Value>../src/ASF/sam0/drivers/sercom</Value>
       <Value>../src/ASF/sam0/drivers/sercom/spi</Value>
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
-      <Value>../src/ASF/sam0/drivers/dsu</Value>
-      <Value>../src/ASF/sam0/drivers/dsu/crc32</Value>
-      <Value>../src/ASF/sam0/drivers/pac</Value>
-      <Value>../src/ASF/sam0/drivers/pac/pac_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/drivers/nvm</Value>
       <Value>../src/ASF/sam0/drivers/sercom/usart</Value>
       <Value>../src/ASF/sam0/utils/stdio/stdio_serial</Value>
@@ -560,6 +571,9 @@
       <Value>../src/ASF/sam0/drivers/tcc</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
+      <Value>../src/ASF/common/services/crc32</Value>
+      <Value>../src/ASF/sam0/drivers/adc</Value>
+      <Value>../src/ASF/sam0/drivers/adc/adc_sam_d_r_h</Value>
     </ListValues>
   </armgcc.preprocessingassembler.general.IncludePaths>
 </ArmGcc>
@@ -585,6 +599,7 @@
       <Value>RTC_CALENDAR_ASYNC=true</Value>
       <Value>TCC_ASYNC=true</Value>
       <Value>I2C_MASTER_CALLBACK_MODE=false</Value>
+      <Value>ADC_CALLBACK_MODE=false</Value>
     </ListValues>
   </armgcc.compiler.symbols.DefSymbols>
   <armgcc.compiler.directories.IncludePaths>
@@ -616,10 +631,6 @@
       <Value>../src/ASF/sam0/drivers/sercom</Value>
       <Value>../src/ASF/sam0/drivers/sercom/spi</Value>
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
-      <Value>../src/ASF/sam0/drivers/dsu</Value>
-      <Value>../src/ASF/sam0/drivers/dsu/crc32</Value>
-      <Value>../src/ASF/sam0/drivers/pac</Value>
-      <Value>../src/ASF/sam0/drivers/pac/pac_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/drivers/nvm</Value>
       <Value>../src/ASF/sam0/drivers/sercom/usart</Value>
       <Value>../src/ASF/sam0/utils/stdio/stdio_serial</Value>
@@ -634,6 +645,9 @@
       <Value>../src/ASF/sam0/drivers/tcc</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
+      <Value>../src/ASF/common/services/crc32</Value>
+      <Value>../src/ASF/sam0/drivers/adc</Value>
+      <Value>../src/ASF/sam0/drivers/adc/adc_sam_d_r_h</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
@@ -645,16 +659,18 @@
     <ListValues>
       <Value>libarm_cortexM0l_math</Value>
       <Value>libm</Value>
+      <Value>libMQTT.a</Value>
     </ListValues>
   </armgcc.linker.libraries.Libraries>
   <armgcc.linker.libraries.LibrarySearchPaths>
     <ListValues>
       <Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value>
+      <Value>C:\Users\John\Documents\GitHub\DroneDAD\DroneDADApplication\src\iot\mqtt</Value>
     </ListValues>
   </armgcc.linker.libraries.LibrarySearchPaths>
   <armgcc.linker.optimization.GarbageCollectUnusedSections>True</armgcc.linker.optimization.GarbageCollectUnusedSections>
   <armgcc.linker.memorysettings.ExternalRAM />
-  <armgcc.linker.miscellaneous.LinkerFlags>-Wl,--entry=Reset_Handler -Wl,--cref -mthumb -T../src/ASF/sam0/utils/linker_scripts/samd21/gcc/samd21g18a_flash.ld --specs=nano.specs -lc -u _printf_float</armgcc.linker.miscellaneous.LinkerFlags>
+  <armgcc.linker.miscellaneous.LinkerFlags>-Wl,--entry=Reset_Handler -Wl,--cref -mthumb -T../src/ASF/sam0/utils/linker_scripts/samd21/gcc/samd21g18a_flash.ld --specs=nano.specs  -lc -u _printf_float -Wl,--section-start=.text=0x6400</armgcc.linker.miscellaneous.LinkerFlags>
   <armgcc.assembler.general.IncludePaths>
     <ListValues>
       <Value>../src/ASF/common/boards</Value>
@@ -684,10 +700,6 @@
       <Value>../src/ASF/sam0/drivers/sercom</Value>
       <Value>../src/ASF/sam0/drivers/sercom/spi</Value>
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
-      <Value>../src/ASF/sam0/drivers/dsu</Value>
-      <Value>../src/ASF/sam0/drivers/dsu/crc32</Value>
-      <Value>../src/ASF/sam0/drivers/pac</Value>
-      <Value>../src/ASF/sam0/drivers/pac/pac_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/drivers/nvm</Value>
       <Value>../src/ASF/sam0/drivers/sercom/usart</Value>
       <Value>../src/ASF/sam0/utils/stdio/stdio_serial</Value>
@@ -702,10 +714,13 @@
       <Value>../src/ASF/sam0/drivers/tcc</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
+      <Value>../src/ASF/common/services/crc32</Value>
+      <Value>../src/ASF/sam0/drivers/adc</Value>
+      <Value>../src/ASF/sam0/drivers/adc/adc_sam_d_r_h</Value>
     </ListValues>
   </armgcc.assembler.general.IncludePaths>
   <armgcc.assembler.debugging.DebugLevel>Default (-g)</armgcc.assembler.debugging.DebugLevel>
-  <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=USER_BOARD -DSPI_CALLBACK_MODE=true -DUSART_CALLBACK_MODE=true -DSYSTICK_MODE -DEXTINT_CALLBACK_MODE=true -DRTC_CALENDAR_ASYNC=true -DTCC_ASYNC=true -DI2C_MASTER_CALLBACK_MODE=false</armgcc.preprocessingassembler.general.AssemblerFlags>
+  <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM0PLUS=true -DBOARD=USER_BOARD -DSPI_CALLBACK_MODE=true -DUSART_CALLBACK_MODE=true -DSYSTICK_MODE -DEXTINT_CALLBACK_MODE=true -DRTC_CALENDAR_ASYNC=true -DTCC_ASYNC=true -DI2C_MASTER_CALLBACK_MODE=false -DADC_CALLBACK_MODE=false</armgcc.preprocessingassembler.general.AssemblerFlags>
   <armgcc.preprocessingassembler.general.IncludePaths>
     <ListValues>
       <Value>../src/ASF/common/boards</Value>
@@ -735,10 +750,6 @@
       <Value>../src/ASF/sam0/drivers/sercom</Value>
       <Value>../src/ASF/sam0/drivers/sercom/spi</Value>
       <Value>../src/ASF/common2/components/memory/serial_flash/at25dfx/hal/spi_polled</Value>
-      <Value>../src/ASF/sam0/drivers/dsu</Value>
-      <Value>../src/ASF/sam0/drivers/dsu/crc32</Value>
-      <Value>../src/ASF/sam0/drivers/pac</Value>
-      <Value>../src/ASF/sam0/drivers/pac/pac_sam_d_r_h</Value>
       <Value>../src/ASF/sam0/drivers/nvm</Value>
       <Value>../src/ASF/sam0/drivers/sercom/usart</Value>
       <Value>../src/ASF/sam0/utils/stdio/stdio_serial</Value>
@@ -753,6 +764,9 @@
       <Value>../src/ASF/sam0/drivers/tcc</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c</Value>
       <Value>../src/ASF/sam0/drivers/sercom/i2c/i2c_sam0</Value>
+      <Value>../src/ASF/common/services/crc32</Value>
+      <Value>../src/ASF/sam0/drivers/adc</Value>
+      <Value>../src/ASF/sam0/drivers/adc/adc_sam_d_r_h</Value>
     </ListValues>
   </armgcc.preprocessingassembler.general.IncludePaths>
   <armgcc.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcc.preprocessingassembler.debugging.DebugLevel>
@@ -800,14 +814,15 @@
     <Folder Include="src\ASF\common\components\wifi\winc1500\spi_flash\include\" />
     <Folder Include="src\ASF\common\components\wifi\winc1500\spi_flash\source\" />
     <Folder Include="src\ASF\common\services\" />
+    <Folder Include="src\ASF\common\services\crc32\" />
     <Folder Include="src\ASF\common\services\serial\" />
     <Folder Include="src\ASF\common\services\serial\sam0_usart\" />
     <Folder Include="src\ASF\common\utils\" />
     <Folder Include="src\ASF\common\utils\interrupt\" />
     <Folder Include="src\ASF\sam0\" />
     <Folder Include="src\ASF\sam0\drivers\" />
-    <Folder Include="src\ASF\sam0\drivers\dsu\" />
-    <Folder Include="src\ASF\sam0\drivers\dsu\crc32\" />
+    <Folder Include="src\ASF\sam0\drivers\adc\" />
+    <Folder Include="src\ASF\sam0\drivers\adc\adc_sam_d_r_h\" />
     <Folder Include="src\ASF\sam0\drivers\extint\" />
     <Folder Include="src\ASF\sam0\drivers\extint\extint_sam_d_r_h\" />
     <Folder Include="src\ASF\sam0\drivers\nvm\" />
@@ -880,9 +895,55 @@
     <Folder Include="src\config\" />
     <Folder Include="src\iot" />
     <Folder Include="src\iot\http" />
+    <Folder Include="src\iot\mqtt\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\adc_temp.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\adc_temp.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\ASF\common2\components\memory\serial_flash\at25dfx\at25dfx.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\ASF\common\services\crc32\crc32.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\ASF\common\services\crc32\crc32.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\ASF\sam0\drivers\adc\adc.h">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="src\ASF\sam0\drivers\adc\adc_sam_d_r_h\adc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\ASF\sam0\drivers\adc\adc_sam_d_r_h\adc_feature.h">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="src\CLIHandler.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\CLIHandler.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\dd_mqtt.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\dd_mqtt.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\iot\mqtt\mqtt.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\MPU9150Driver.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\NVMStorage.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\SerialConsole.h">
       <SubType>compile</SubType>
     </Compile>
     <None Include="src\ASF\common\components\wifi\winc1500\bsp\include\nm_bsp_internal.h">
@@ -1113,10 +1174,16 @@
     <None Include="src\ASF\sam0\drivers\tcc\tcc_callback.h">
       <SubType>compile</SubType>
     </None>
+    <Compile Include="src\FlashStorage.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\GyroscopeDriver.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\GyroscopeDriver.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\HttpDownloader.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\LEDDriver.h">
@@ -1146,15 +1213,6 @@
     <None Include="src\ASF\common\services\serial\serial.h">
       <SubType>compile</SubType>
     </None>
-    <Compile Include="src\ASF\sam0\drivers\dsu\crc32\crc32.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <None Include="src\ASF\sam0\drivers\dsu\crc32\crc32.h">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\ASF\sam0\drivers\pac\pac.h">
-      <SubType>compile</SubType>
-    </None>
     <Compile Include="src\ASF\sam0\drivers\nvm\nvm.c">
       <SubType>compile</SubType>
     </Compile>
@@ -1164,9 +1222,6 @@
     <None Include="src\ASF\sam0\drivers\nvm\nvm.h">
       <SubType>compile</SubType>
     </None>
-    <Compile Include="src\ASF\sam0\drivers\pac\pac_sam_d_r_h\pac.c">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\ASF\sam0\drivers\port\port.c">
       <SubType>compile</SubType>
     </Compile>
@@ -1764,6 +1819,9 @@
     <Compile Include="src\main.c">
       <SubType>compile</SubType>
     </Compile>
+    <None Include="src\iot\mqtt\libMQTT.a">
+      <SubType>compile</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
 </Project>

@@ -4,11 +4,11 @@
 
 src\ASF\common2\components\memory\serial_flash\at25dfx\at25dfx.c
 
-src\ASF\sam0\drivers\dsu\crc32\crc32.c
+src\ASF\common2\services\delay\sam0\cycle_counter.c
+
+src\ASF\common\services\crc32\crc32.c
 
 src\ASF\sam0\drivers\nvm\nvm.c
-
-src\ASF\sam0\drivers\pac\pac_sam_d_r_h\pac.c
 
 src\ASF\sam0\drivers\port\port.c
 
@@ -23,8 +23,6 @@ src\ASF\sam0\drivers\sercom\sercom_interrupt.c
 src\ASF\sam0\drivers\sercom\spi\spi.c
 
 src\ASF\sam0\drivers\sercom\spi\spi_interrupt.c
-
-src\ASF\sam0\drivers\sercom\spi_master_vec\spi_master_vec.c
 
 src\ASF\sam0\drivers\sercom\usart\usart.c
 

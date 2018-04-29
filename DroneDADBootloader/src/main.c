@@ -1,7 +1,12 @@
+/*
+ * Bootloader
+ */
+
 #include <asf.h>
 #include <at25dfx_hal.h>
 #include <crc32.h>
 #include <stdio.h>
+#include <delay.h>
 
 // NVM Information
 #define NVM_NUMBER_OF_PAGES 0x1000
@@ -12,8 +17,8 @@
 #define FLASH_HEADER_ADDR 0x0
 
 // NVM Locations
-#define APPLICATION_ROW 40 
-#define APP_START_ADDR (APPLICATION_ROW * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE) // 0x2800 for Row 40
+#define APPLICATION_ROW 64
+#define APP_START_ADDR (APPLICATION_ROW * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE) // 0x=6400 for Row 64
 #define BOOT_STATUS_ROW (NVM_NUMBER_OF_ROWS - 1) // Store boot status in second to last row. (1023)
 #define APPLICATION_METADATA_ROW (NVM_NUMBER_OF_ROWS - 2) // Store metadata inn third to last row. (1022)
 
@@ -44,9 +49,11 @@ struct application_metadata {
 };
 
 struct flash_header {
-	uint32_t crc; // Maybe not necessary. Would be a CRC of address.
 	uint32_t metadata_addr[MAX_APPLICATION_COUNT];
 };
+
+/** UART module for debug. */
+static struct usart_module cdc_uart_module;
 
 // Serial Setup
 #define AT25DFX_BUFFER_SIZE  (512)
@@ -68,11 +75,20 @@ static void at25dfx_init(void)
 	at25dfx_spi_config.pinmux_pad2 = PINMUX_PA18C_SERCOM1_PAD2; // MOSI - AT25DFX_SPI_PINMUX_PAD2;
 	at25dfx_spi_config.pinmux_pad3 = PINMUX_PA19C_SERCOM1_PAD3; // SCK - AT25DFX_SPI_PINMUX_PAD3;
 	status = spi_init(&at25dfx_spi, SERCOM1 /*AT25DFX_SPI*/, &at25dfx_spi_config);
+	if(STATUS_OK != status) {
+		printf("Failed to intialize Flash memory chip.\r\n");
+	}
 	spi_enable(&at25dfx_spi);
 	
 	at25dfx_chip_config.type = AT25DFX_081A; // AT25DFX_MEM_TYPE;
 	at25dfx_chip_config.cs_pin = PIN_PA07; // AT25DFX_CS;
 	status = at25dfx_chip_init(&at25dfx_chip, &at25dfx_spi, &at25dfx_chip_config);
+	if(STATUS_OK != status) {
+		printf("Failed to intialize Flash memory chip.\r\n");
+	}
+	
+	at25dfx_chip_wake(&at25dfx_chip);
+	at25dfx_chip_sleep(&at25dfx_chip);
 }
 
 void watchdog_early_warning_callback(void)
@@ -123,6 +139,10 @@ void application_jump(void) {
 	// Set the function pointer.
 	application_code_entry = (void (*)(void))(unsigned*)(*(unsigned*)(APP_START_ADDR + 4));
 
+	// Last thing we do before jumping is disable the USART. Otherwise the App cannot regain control of it.
+	usart_disable(&cdc_uart_module);
+	spi_disable(&at25dfx_spi);
+
 	application_code_entry();
 }
 
@@ -137,6 +157,32 @@ enum status_code dd_nvm_row_read(int row, uint8_t* data, int data_len) {
 	return status;
 };
 
+enum status_code dd_nvm_page_read(int page, uint8_t* data, int data_len) {
+	enum status_code status;
+	
+	//printf("Reading NVM Page %d\r\n", page);
+	
+	int page_addr = page * NVMCTRL_PAGE_SIZE;
+	do {
+		status = nvm_read_buffer(page_addr, data, data_len);
+	} while (status == STATUS_BUSY);
+	
+	return status;
+};
+
+enum status_code dd_nvm_page_write(int page, uint8_t* data, int data_len) {
+	enum status_code status;
+	int page_addr = page * NVMCTRL_PAGE_SIZE;
+	
+	//printf("Writing to NVM Page %d\r\n", page);
+	
+	do {
+		status = nvm_write_buffer(page_addr, data, data_len);
+	} while(status == STATUS_BUSY);
+	
+	return status;
+};
+
 enum status_code dd_nvm_row_write(int row, uint8_t* data, int data_len) {
 	enum status_code status;
 	int row_addr = row * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE;
@@ -144,15 +190,30 @@ enum status_code dd_nvm_row_write(int row, uint8_t* data, int data_len) {
 	do {
 		status = nvm_erase_row(row_addr);	
 	} while(status == STATUS_BUSY);
-	
 	if(status != STATUS_OK) {
 		return status;
 	}
 	
-	do {
-		nvm_write_buffer(row_addr, data, data_len);
-	} while (status == STATUS_BUSY);
-	
+	int i = 0;
+	uint32_t page = row * NVMCTRL_ROW_PAGES;
+	uint32_t dataRemaining = data_len;
+	while(dataRemaining != 0) {
+		if(dataRemaining > NVMCTRL_PAGE_SIZE) {
+			status = dd_nvm_page_write(page + i, data + (i*NVMCTRL_PAGE_SIZE), NVMCTRL_PAGE_SIZE);
+			if(status != STATUS_OK) {
+				return status;
+			}
+			i++;
+			dataRemaining -= NVMCTRL_PAGE_SIZE;
+		}
+		else {
+			status = dd_nvm_page_write(page + i, data + (i*NVMCTRL_PAGE_SIZE), dataRemaining);
+			if(status != STATUS_OK) {
+				return status;
+			}
+			dataRemaining = 0;
+		}
+	}
 	return status;
 }
 
@@ -199,6 +260,7 @@ enum status_code load_golden_image() {
 }
 
 void restart() {
+	printf("Restarting...");
 	while(1) {}; // TODO: Implement watchdog functionality to reboot.
 }
 
@@ -306,56 +368,129 @@ bool check_flash_application_crc(uint32_t crc_to_check, uint32_t flash_addr, uin
 	enum status_code status;
 	const uint32_t CHUNK_LEN = 4096; // We'll read 4kb chunks.
 	uint8_t data[CHUNK_LEN];
-	uint32_t calculated_crc;
+	uint32_t calculated_crc = 0;
 	
 	// Loop through the application in 4KB chunks to calculate the CRC.
-	for(int i = 0; i < data_len; i += CHUNK_LEN) {
+	int i = 0;
+	bool dataReady = true;
+	while(dataReady) {
 		status = dd_flash_read_data(flash_addr + i, &data[0], CHUNK_LEN);
 		if(STATUS_OK != status) {
 			return false;
 		}
-		
-		status = dsu_crc32_cal(&data[0], CHUNK_LEN, &calculated_crc);
-		if(STATUS_OK != status) {
-			return false;
+
+		// Compute the CRC on the chunk if we have a full chunk in our buffer.
+		if(i + CHUNK_LEN < data_len) { // If we have more than a chunk left to read, crc a full chunk
+			crc32_recalculate(&data[0], CHUNK_LEN, &calculated_crc);
 		}
+		else { // If we have less than a full chunk to read, do not! We will do our last crc after this loop.
+			crc32_recalculate(&data[0], data_len - i, &calculated_crc);
+			dataReady = false;
+		}
+
+		// Keep Going.
+		i += CHUNK_LEN;
+		printf("Checked %d of %d bytes\r", i, data_len);
 	}
+	printf("\r\n");
 	
 	return (calculated_crc == crc_to_check);
 }
 
 bool check_nvm_application_crc(uint32_t crc_to_check, uint32_t nvm_row, uint32_t data_len) {
 	enum status_code status;
-	const uint32_t CHUNK_LEN = NVMCTRL_ROW_SIZE; // We'll read in rows.
+	const uint32_t CHUNK_LEN = NVMCTRL_PAGE_SIZE; // We'll read in pages
 	uint8_t data[CHUNK_LEN];
 	uint32_t calculated_crc;
+	
+	uint32_t nvm_page = nvm_row * NVMCTRL_ROW_PAGES;
 		
-	// Loop through the application in 4KB chunks to calculate the CRC.
-	for(int i = 0; i < data_len; i += CHUNK_LEN) {
-		status = dd_nvm_row_read(nvm_row + i, &data[0], CHUNK_LEN);
-		if(STATUS_OK != status) {
-			return false;
+	// Loop through the application in 256B chunks to calculate the CRC.
+	int i = 0;
+	uint32_t dataRemaining = data_len;
+	while(dataRemaining > 0) {
+		if((dataRemaining / CHUNK_LEN) > 0) {
+			// Read a chunk of data
+			status = dd_nvm_page_read(nvm_page + i, &data[0], CHUNK_LEN);
+			if(STATUS_OK != status) {
+				printf("NVM Row Read failed! (%d)\r\n", status);
+				return false;	
+			}
+			crc32_recalculate(&data[0], CHUNK_LEN, &calculated_crc);
+			dataRemaining -= CHUNK_LEN;
+		}
+		else {
+			// Read the last bit
+			status = dd_nvm_page_read(nvm_page + i, &data[0], dataRemaining);
+			if(STATUS_OK != status) {
+				printf("NVM Row Read failed! (%d)\r\n", status);
+				return false;
+			}
+			crc32_recalculate(&data[0], dataRemaining, &calculated_crc);
+			dataRemaining = 0;
 		}
 				
-		status = dsu_crc32_cal(&data[0], CHUNK_LEN, &calculated_crc);
-		if(STATUS_OK != status) {
-			return false;
-		}
+		// Keep Going.
+		i++;
+		printf("Checked %d of %d bytes\r", (data_len - dataRemaining), data_len);
 	}
-		
+	
+	printf("%s: Expected %x\r\n", __func__, crc_to_check);
+	printf("%s: Actual %x\r\n", __func__, calculated_crc);
 	return (calculated_crc == crc_to_check);
 }
 
 enum status_code write_application_to_nvm(uint32_t flash_addr, uint32_t data_len) {
-	enum status_code status;
+	enum status_code status = STATUS_OK;
 	const int CHUNK_LEN = NVMCTRL_ROW_SIZE;
 	uint8_t data[CHUNK_LEN];
+	uint32_t calculated_crc = 0;
 	
-	for(unsigned int i = 0; i < data_len; i += CHUNK_LEN) {
-		status = dd_flash_read_data(flash_addr + i, &data[0], CHUNK_LEN);
-		status = dd_nvm_row_write(APPLICATION_ROW + i, &data[0], CHUNK_LEN);
+	int i = 0;
+	uint32_t dataRemaining = data_len;
+	while(dataRemaining > 0) {
+		if(dataRemaining > CHUNK_LEN) {
+			status = dd_flash_read_data(flash_addr + i, &data[0], CHUNK_LEN);
+			if(status != STATUS_OK) {
+				printf("Failed Flash Read (%d)\r\n", status);
+				break;
+			}
+			
+			crc32_recalculate(&data[0], CHUNK_LEN, &calculated_crc);
+			
+			status = dd_nvm_row_write(APPLICATION_ROW + (i / CHUNK_LEN), &data[0], CHUNK_LEN);
+			if(status != STATUS_OK) {
+				printf("Failed NVM Write (%d)\r\n", status);
+				break;
+			}
+			
+			dataRemaining -= CHUNK_LEN;
+		}
+		else {
+			status = dd_flash_read_data(flash_addr + i, &data[0], dataRemaining);
+			if(status != STATUS_OK) {
+				printf("Failed Flash Read (%d)\r\n", status);
+				break;
+			}
+			
+			crc32_recalculate(&data[0], dataRemaining, &calculated_crc);
+			
+			status = dd_nvm_row_write(APPLICATION_ROW + (i / CHUNK_LEN), &data[0], dataRemaining);
+			if(status != STATUS_OK) {
+				printf("Failed NVM Write (%d)\r\n", status);
+				break;
+			}
+			
+			dataRemaining = 0;
+		}
+		printf("Wrote %d of %d bytes.\r", (data_len - dataRemaining), data_len);
+		i += CHUNK_LEN;
 	}
+
+	printf("\r\n");
 	
+	printf("%s: Flash Actual %x\r\n", __func__, calculated_crc);
+	return status;
 }
 
 enum status_code do_fw_update(struct boot_status* bs) {
@@ -367,23 +502,28 @@ enum status_code do_fw_update(struct boot_status* bs) {
 	if(STATUS_OK != status) {
 		return status;
 	}
+	printf("New FW Located at Index %d (0x%x)\r\n", am.index, am.start_addr);
+	printf("New FW CRC: 0x%x\r\n", am.crc);
 			
 	// Check CRC on flash.
 	bool flash_crc_valid = check_flash_application_crc(am.crc, am.start_addr, am.data_len);
 	if(flash_crc_valid == false) {
-		error_loop();
+		printf("CRC of data on flash failed!\r\n");
+		return STATUS_BUSY;
 	}
 			
 	// Update.
 	status = write_application_to_nvm(am.start_addr, am.data_len);
 	if(STATUS_OK != status) {
+		printf("Failed writing application to NVM!\r\n");
 		return status;
 	}
 			
 	// Check CRC on nvm.
 	bool nvm_crc_valid = check_nvm_application_crc(am.crc, APPLICATION_ROW, am.data_len);
 	if(nvm_crc_valid == false) {
-		error_loop();
+		printf("Failed NVM CRC Check!\r\n");
+		return STATUS_BUSY;
 	}
 	
 	// Write the metadata to NVM
@@ -394,7 +534,7 @@ enum status_code do_fw_update(struct boot_status* bs) {
 			
 	// Update the status flag.
 	bs->install_flag = INSTALL_FLAG_FALSE;
-	status = set_boot_status(&bs);
+	status = set_boot_status(bs);
 	if(STATUS_OK != status) {
 		return status;
 	}
@@ -416,6 +556,57 @@ bool loaded_fw_valid() {
 	return ret;
 }
 
+/**
+ * \brief Configure UART console.
+ */
+#define EDBG_CDC_MODULE              SERCOM4
+#define EDBG_CDC_SERCOM_MUX_SETTING  USART_RX_3_TX_2_XCK_3
+#define EDBG_CDC_SERCOM_PINMUX_PAD0  PINMUX_UNUSED
+#define EDBG_CDC_SERCOM_PINMUX_PAD1  PINMUX_UNUSED
+#define EDBG_CDC_SERCOM_PINMUX_PAD2  PINMUX_PB10D_SERCOM4_PAD2
+#define EDBG_CDC_SERCOM_PINMUX_PAD3  PINMUX_PB11D_SERCOM4_PAD3
+static void uartConsole_init(void)
+{
+	struct usart_config usart_conf;
+
+	usart_get_config_defaults(&usart_conf);
+	usart_conf.mux_setting = EDBG_CDC_SERCOM_MUX_SETTING;
+	usart_conf.pinmux_pad0 = EDBG_CDC_SERCOM_PINMUX_PAD0;
+	usart_conf.pinmux_pad1 = EDBG_CDC_SERCOM_PINMUX_PAD1;
+	usart_conf.pinmux_pad2 = EDBG_CDC_SERCOM_PINMUX_PAD2;
+	usart_conf.pinmux_pad3 = EDBG_CDC_SERCOM_PINMUX_PAD3;
+	usart_conf.baudrate    = 115200;
+
+	stdio_serial_init(&cdc_uart_module, EDBG_CDC_MODULE, &usart_conf);
+	usart_enable(&cdc_uart_module);
+}
+
+void nvm_test() {
+	 uint8_t page_buffer[NVMCTRL_PAGE_SIZE];
+	 uint8_t read_buffer[NVMCTRL_PAGE_SIZE] = { '\0' };
+	 for (uint32_t i = 0; i < NVMCTRL_PAGE_SIZE; i++) {
+		 page_buffer[i] = i;
+	 }
+	 enum status_code error_code;
+	 do
+	 {
+		 error_code = nvm_erase_row(
+		 100 * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE);
+	 } while (error_code == STATUS_BUSY);
+	 do
+	 {
+		 error_code = nvm_write_buffer(
+		 100 * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE,
+		 page_buffer, NVMCTRL_PAGE_SIZE);
+	 } while (error_code == STATUS_BUSY);
+	 do
+	 {
+		 error_code = nvm_read_buffer(
+		 100 * NVMCTRL_ROW_PAGES * NVMCTRL_PAGE_SIZE,
+		 read_buffer, NVMCTRL_PAGE_SIZE);
+	 } while (error_code == STATUS_BUSY);
+}
+
 int main (void) {	
 	enum status_code status;
 	
@@ -423,7 +614,7 @@ int main (void) {
 	system_init();
 	nvm_init();
 	at25dfx_init();
-	dsu_crc32_init();
+	delay_init();
 	// Enable watchdogs, kick by calling wdt_reset_count() -- Only when ready!
 	//configure_wdt();
 	//configure_wdt_callbacks();
@@ -432,13 +623,18 @@ int main (void) {
 	// Get our boot status
 	struct boot_status bs;
 	get_boot_status(&bs);
+	uartConsole_init();
 	
+	printf("\r\n\r\n====DRONEDAD Bootloader====\r\n");
+	printf("Compiled %s %s\r\n", __TIME__, __DATE__);
+
+	printf("Checking Boot Status...\r\n");
 	if(check_signature(bs.signature) == false) {
-		printf("Invalid boot signature. Boot Status cannot be trusted.");
-		printf("Attempting CRC check on FW.");
+		printf("Invalid boot signature. Boot Status cannot be trusted.\r\n");
+		printf("Attempting CRC check on FW.\r\n");
 		if(loaded_fw_valid() == true) {
 			// Our FW  is valid, we have corrupted the boot flag. Reset the flag and reboot.
-			printf("FW valid. Reseting Boot signature and restarting...");
+			printf("FW valid. Reseting Boot signature and restarting...\r\n");
 			get_boot_status_default(&bs);
 			set_boot_status(&bs);
 			restart();
@@ -446,19 +642,27 @@ int main (void) {
 		else {
 			// Our boot status was invalid and the CRC did not match.
 			// We should load the golden image from flash to NVM.
-			printf("FW invalid. Attempting to load Golden Image");
+			printf("FW invalid. Attempting to load Golden Image\r\n");
 			load_golden_image();
+			get_boot_status_default(&bs);
+			set_boot_status(&bs);
 			restart();
 		}
 	}
+	else {
+		printf("Boot Signature Valid.\r\n");
+	}
 	
 	if(bs.install_flag == INSTALL_FLAG_TRUE) {
-		printf("We need to install!");
+		printf("Update Scheduled. Now Updating...\r\n");
 		
 		status = do_fw_update(&bs);
 		if(STATUS_OK != status) {
 			printf("Failed FW update!");
 			error_loop();
+		}
+		else {
+			printf("Firmware Update Successful.\r\n");
 		}
 		
 		// All good, reboot.
@@ -466,6 +670,7 @@ int main (void) {
 	}
 	
 	// Application time!
+	printf("Jumping to application\r\n");
 	application_jump();
 	
 	// Should not get here.

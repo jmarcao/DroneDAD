@@ -52,7 +52,7 @@
  * running the ASF driver selector tool. Any changes will be discarded.
  */
 
-// From module: CRC32 - 32-bit cyclic redundancy check
+// From module: CRC-32 calculation
 #include <crc32.h>
 
 // From module: Common SAM0 compiler driver
@@ -65,6 +65,9 @@
 // From module: Common files for AT25DFx SerialFlash drivers
 #include <at25dfx.h>
 
+// From module: Delay routines
+#include <delay.h>
+
 // From module: Generic board support
 #include <board.h>
 
@@ -73,9 +76,6 @@
 
 // From module: NVM - Non-Volatile Memory
 #include <nvm.h>
-
-// From module: PAC - Peripheral Access Controller
-#include <pac.h>
 
 // From module: PORT - GPIO Pin Control
 #include <port.h>
@@ -90,9 +90,6 @@
 // From module: SERCOM SPI - Serial Peripheral Interface (Callback APIs)
 #include <spi.h>
 #include <spi_interrupt.h>
-
-// From module: SERCOM SPI - Serial Peripheral Interface (Master Mode, Vectored I/O)
-#include <spi_master_vec.h>
 
 // From module: SERCOM USART - Serial Communications (Callback APIs)
 #include <usart.h>
